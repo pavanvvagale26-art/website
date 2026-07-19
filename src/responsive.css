@@ -1,0 +1,102 @@
+@media (max-width: 992px) {
+  .about-section {
+    flex-direction: column;   /* Image on top */
+    text-align: center;
+  }
+
+  .about-image {
+    display: flex;
+    
+    justify-content: center;  /* Center image */
+  }
+
+   .about-image img {
+    width: 100%;
+    height: 50%;
+    max-width: 320px;
+  }
+
+  .about-text {
+    margin-top: 30px;
+    width: auto;
+  }
+}
+
+/* ============================= */
+/* MOBILE HERO DESIGN */
+/* ============================= */
+
+@media (max-width: 922px) {
+
+   .hero-section {
+    flex-direction: column-reverse;   /* Image on top */
+    text-align: center;
+    padding: 40px 20px;
+  }
+
+  .hero-left {
+    width: 100%;
+    padding: 10%;
+  }
+
+  .hero-right {
+    width: 100%;
+    margin-bottom: 20px;
+  }
+
+  .hero-right img {
+    width: 85%;
+    max-width: 320px;
+  }
+
+  .hero-left h1 {
+    font-size: 26px;
+    text-align: center;
+  }
+
+  .hero-left h2 {
+    font-size: 22px;
+    text-align: center;
+    margin-top: -3%;
+  }
+
+  .hero-left p {
+    font-size: 14px;
+    line-height: 1.6;
+    margin-top: 10px;
+    text-align: center;
+  }
+
+  .btn-red {
+    width: 70%;
+    max-width: 250px;
+    margin: 20px auto 0;
+    display: block;
+  }
+}
+
+@media (max-width: 768px) {
+
+  .burger-nav {
+    padding: 0 10px;
+  }
+
+  .nav-menu {
+    gap: 8px;
+    margin: 0 auto;
+  }
+
+  .nav-menu a {
+    font-size: 0.55rem;
+  }
+
+  .burger-hero {
+    grid-template-columns: 1fr;
+    text-align: center;
+    padding: 120px 20px 60px;
+  }
+
+  .burger-image img {
+    width: 280px;
+  }
+}
