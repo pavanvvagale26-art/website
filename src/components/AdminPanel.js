@@ -7,7 +7,7 @@ import {
   FaBoxOpen, FaClipboardList, FaChartBar, FaSignOutAlt,
   FaPlus, FaTrash, FaCheck, FaFire, FaTruck, FaImage,
   FaRupeeSign, FaShoppingBag, FaMotorcycle, FaArrowUp, FaEdit, FaTimes, FaSave,
-  FaPhone, FaEnvelope, FaMoneyBillWave, FaUser, FaMapMarkerAlt,
+  FaPhone, FaEnvelope, FaUser, FaMapMarkerAlt,
   FaClock, FaUtensils, FaChartLine, FaReceipt
 } from "react-icons/fa";
 import "../App.css";
@@ -420,27 +420,21 @@ export default function AdminPanel() {
                       </tr>
                     </thead>
                     <tbody>
-                      {todayOrders.slice(0, 6).map((o) => {
-                        const displayItem = o.items && o.items.length > 1
-                          ? `${o.items[0].name} + ${o.items.length - 1} more`
-                          : o.items && o.items.length === 1
-                            ? o.items[0].name
-                            : o.item;
-                        return (
+                      {todayOrders.slice(0, 6).map((o) => (
                         <tr key={o.id}>
                           <td className="order-id-cell">{o.id}</td>
-                          <td>{displayItem}</td>
+                          <td>{o.item}</td>
                           <td>{o.customer}</td>
                           <td>{o.qty}</td>
                           <td className="order-total-cell">₹{o.total}</td>
                           <td>
                             <span className={`payment-badge ${o.paymentMethod === 'cod'
-                                ? o.codPaymentReceived
-                                  ? o.codCollectionMethod === 'upi_scan'
-                                    ? 'payment-cod-upi'
-                                    : 'payment-cod-done'
-                                  : 'payment-cod'
-                                : 'payment-upi'
+                              ? o.codPaymentReceived
+                                ? o.codCollectionMethod === 'upi_scan'
+                                  ? 'payment-cod-upi'
+                                  : 'payment-cod-done'
+                                : 'payment-cod'
+                              : 'payment-upi'
                               }`}>
                               {o.paymentMethod === 'cod'
                                 ? o.codPaymentReceived
@@ -460,8 +454,7 @@ export default function AdminPanel() {
                             </span>
                           </td>
                         </tr>
-                        );
-                      })}
+                      ))}
                       {todayOrders.length === 0 && (
                         <tr>
                           <td colSpan="7" className="empty-table-msg">No orders yet today</td>
@@ -703,20 +696,15 @@ export default function AdminPanel() {
                   <small>Orders will appear here once customers place them</small>
                 </div>
               )}
-              {todayOrders.map((order) => {
-                const hasMultiItems = order.items && order.items.length > 1;
-                const orderItems = order.items && order.items.length > 0 ? order.items : [{ name: order.item, price: order.price, qty: order.qty, total: order.total, img: order.img }];
-                return (
-                <div key={order.id} className={`order-card-admin ${order.status === 'pending' ? 'order-pending-glow' : ''} ${hasMultiItems ? 'order-multi-item' : ''}`}>
+              {todayOrders.map((order) => (
+                <div key={order.id} className={`order-card-admin ${order.status === 'pending' ? 'order-pending-glow' : ''}`}>
                   <div className="order-card-top">
                     <div className="order-card-left">
-                      {!hasMultiItems && (
-                        <img src={orderItems[0].img} alt={orderItems[0].name} className="order-thumb" />
-                      )}
+                      <img src={order.img} alt={order.item} className="order-thumb" />
                       <div className="order-details">
-                        <h4>{hasMultiItems ? `${orderItems.length} Items` : orderItems[0].name}</h4>
+                        <h4>{order.item}</h4>
                         <p className="order-meta">
-                          <span>Total Qty: {order.qty}</span> &bull;
+                          <span>Qty: {order.qty}</span> &bull;
                           <span> ₹{order.total}</span>
                         </p>
                       </div>
@@ -733,12 +721,12 @@ export default function AdminPanel() {
                         {statusConfig[order.status]?.label}
                       </span>
                       <span className={`payment-badge ${order.paymentMethod === 'cod'
-                          ? order.codPaymentReceived
-                            ? order.codCollectionMethod === 'upi_scan'
-                              ? 'payment-cod-upi'
-                              : 'payment-cod-done'
-                            : 'payment-cod'
-                          : 'payment-upi'
+                        ? order.codPaymentReceived
+                          ? order.codCollectionMethod === 'upi_scan'
+                            ? 'payment-cod-upi'
+                            : 'payment-cod-done'
+                          : 'payment-cod'
+                        : 'payment-upi'
                         }`}>
                         {order.paymentMethod === 'cod'
                           ? order.codPaymentReceived
@@ -750,25 +738,6 @@ export default function AdminPanel() {
                       </span>
                     </div>
                   </div>
-
-                  {/* Multi-item list */}
-                  {hasMultiItems && (
-                    <div className="order-items-list">
-                      {orderItems.map((it, idx) => (
-                        <div key={idx} className="order-item-row">
-                          <img src={it.img} alt={it.name} className="order-item-thumb" />
-                          <div className="order-item-info">
-                            <span className="order-item-name">{it.name}</span>
-                            <span className="order-item-meta">Qty: {it.qty} &bull; ₹{it.total}</span>
-                          </div>
-                        </div>
-                      ))}
-                      <div className="order-items-total">
-                        <span>Combined Total</span>
-                        <span>₹{order.total}</span>
-                      </div>
-                    </div>
-                  )}
 
                   {/* Customer Details Section */}
                   <div className="order-customer-details">
@@ -823,8 +792,7 @@ export default function AdminPanel() {
                     </div>
                   )}
                 </div>
-                );
-              })}
+              ))}
             </div>
           </div>
         )}

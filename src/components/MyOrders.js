@@ -4,7 +4,6 @@ import { OrderContext } from "../context/OrderContext";
 import {
   FaArrowLeft,
   FaPhone,
-  FaEnvelope,
   FaMapMarkerAlt,
   FaShoppingBag,
   FaSearch,
