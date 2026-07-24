@@ -22,6 +22,7 @@ import {
   FaEnvelope,
   FaSpinner,
   FaCrosshairs,
+  FaCreditCard,
 } from "react-icons/fa";
 import "../App.css";
 
@@ -50,6 +51,8 @@ export default function Cart() {
   const [orderId, setOrderId] = useState("");
   const [countdown, setCountdown] = useState(300); // 5 minutes
   const [paymentMethod, setPaymentMethod] = useState("");
+  const [razorpayError, setRazorpayError] = useState("");
+  const [razorpayLoading, setRazorpayLoading] = useState(false);
 
   // Customer details state
   const [custName, setCustName] = useState("");
@@ -62,6 +65,19 @@ export default function Cart() {
   const [locationDetected, setLocationDetected] = useState(false);
   const [detailsErrors, setDetailsErrors] = useState({});
 
+  // Load Razorpay checkout.js script once
+  useEffect(() => {
+    if (document.getElementById("razorpay-checkout-script")) return;
+    const script = document.createElement("script");
+    script.id = "razorpay-checkout-script";
+    script.src = "https://checkout.razorpay.com/v1/checkout.js";
+    script.async = true;
+    document.body.appendChild(script);
+    return () => {
+      // Leave script in DOM to avoid re-loading on re-render
+    };
+  }, []);
+
   const total = cart.reduce((sum, item) => sum + (item.price || 0) * item.qty, 0);
 
   const handleCancelPayment = useCallback(() => {
@@ -69,6 +85,8 @@ export default function Cart() {
     setPaymentStep("details");
     setOrderId("");
     setPaymentMethod("");
+    setRazorpayError("");
+    setRazorpayLoading(false);
   }, []);
 
   // Countdown timer for payment window
@@ -180,11 +198,109 @@ export default function Cart() {
     setTimeout(() => setPaymentStep("qr"), 1500);
   };
 
-  const handleConfirmPayment = async (method = "upi") => {
+  // ── Razorpay Standard Checkout ──────────────────────────────────────────────
+  const handlePayWithRazorpay = async () => {
+    setRazorpayError("");
+    setRazorpayLoading(true);
+
+    try {
+      const API_URL = process.env.REACT_APP_API_URL || "http://localhost:5000/api";
+      const amountPaise = Math.round(total * 100); // convert ₹ to paise
+
+      // Step 1: Create order on backend
+      const orderRes = await fetch(`${API_URL}/create-order`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          amount: amountPaise,
+          currency: "INR",
+          receipt: orderId,
+        }),
+      });
+
+      if (!orderRes.ok) {
+        const err = await orderRes.json().catch(() => ({}));
+        throw new Error(err.error || "Failed to create payment order. Is the server running?");
+      }
+
+      const { order_id, amount, currency } = await orderRes.json();
+
+      // Step 2: Open Razorpay modal
+      if (!window.Razorpay) {
+        throw new Error("Razorpay script not loaded. Please refresh and try again.");
+      }
+
+      const rzpOptions = {
+        key: process.env.REACT_APP_RAZORPAY_KEY_ID,
+        amount,
+        currency,
+        name: "SGS Restaurant",
+        description: `Order ${orderId}`,
+        order_id,
+        prefill: {
+          name: custName,
+          email: custEmail,
+          contact: custPhone,
+        },
+        theme: { color: "#e8a33d" },
+        modal: {
+          ondismiss: () => {
+            setRazorpayLoading(false);
+            setRazorpayError("Payment was cancelled. Please try again.");
+          },
+        },
+        handler: async (response) => {
+          // Step 3: Verify signature on backend
+          try {
+            const verifyRes = await fetch(`${API_URL}/verify-payment`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                razorpay_order_id: response.razorpay_order_id,
+                razorpay_payment_id: response.razorpay_payment_id,
+                razorpay_signature: response.razorpay_signature,
+              }),
+            });
+
+            const verifyData = await verifyRes.json();
+
+            if (verifyRes.ok && verifyData.success) {
+              // Payment verified — confirm order
+              setRazorpayLoading(false);
+              handleConfirmPayment("razorpay", response.razorpay_payment_id);
+            } else {
+              setRazorpayLoading(false);
+              setRazorpayError("Payment verification failed. Please contact support with your payment ID: " + response.razorpay_payment_id);
+            }
+          } catch (verifyErr) {
+            setRazorpayLoading(false);
+            setRazorpayError("Could not verify payment. Please contact support.");
+          }
+        },
+      };
+
+      // Listen for payment failure
+      const rzp = new window.Razorpay(rzpOptions);
+      rzp.on("payment.failed", (response) => {
+        setRazorpayLoading(false);
+        setRazorpayError(
+          `Payment failed: ${response.error.description || "Unknown error"}. Code: ${response.error.code}`
+        );
+      });
+
+      setRazorpayLoading(false);
+      rzp.open();
+    } catch (err) {
+      setRazorpayLoading(false);
+      setRazorpayError(err.message || "Something went wrong. Please try again.");
+    }
+  };
+
+  const handleConfirmPayment = async (method = "upi", transactionId = null) => {
     setPaymentMethod(method);
     setPaymentStep("confirming");
-    // Simulate verification delay
-    await new Promise((r) => setTimeout(r, method === "cod" ? 1200 : 1800));
+    // Brief delay for non-Razorpay methods to show confirming state
+    await new Promise((r) => setTimeout(r, method === "cod" ? 1200 : method === "razorpay" ? 500 : 1800));
 
     // Place orders with customer details
     cart.forEach((item) => {
@@ -200,6 +316,8 @@ export default function Cart() {
         location: custLocation.trim() || "Not provided",
         coords: custCoords || null, // { lat, lng } for Google Maps navigation
         paymentMethod: method,
+        ...(transactionId ? { transactionId } : {}),
+        ...(method === "razorpay" ? { paymentReceived: true } : {}),
       });
     });
 
@@ -217,6 +335,7 @@ export default function Cart() {
       setPaymentStep("details");
       setOrderId("");
       setPaymentMethod("");
+      setRazorpayError("");
       setCustName("");
       setCustPhone("");
       setCustEmail("");
@@ -471,6 +590,33 @@ export default function Cart() {
                 </div>
 
                 <div className="upi-options">
+                  {/* ── Razorpay (Card / UPI / Netbanking / Wallet) ── */}
+                  <button
+                    className="upi-option-btn razorpay-btn"
+                    onClick={handlePayWithRazorpay}
+                    disabled={razorpayLoading}
+                  >
+                    {razorpayLoading ? <FaSpinner className="spin-icon" /> : <FaCreditCard />}
+                    <div>
+                      <span className="upi-opt-title">
+                        {razorpayLoading ? "Opening payment…" : "Pay with Razorpay"}
+                      </span>
+                      <span className="upi-opt-desc">Card · UPI · Netbanking · Wallets</span>
+                    </div>
+                  </button>
+
+                  {razorpayError && (
+                    <div className="razorpay-error-msg">
+                      ⚠️ {razorpayError}
+                    </div>
+                  )}
+
+                  <div className="upi-divider-row">
+                    <span className="upi-divider-line"></span>
+                    <span className="upi-divider-text">OR</span>
+                    <span className="upi-divider-line"></span>
+                  </div>
+
                   <button className="upi-option-btn upi-app-btn" onClick={handlePayWithApp}>
                     <FaMobileAlt />
                     <div>

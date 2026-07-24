@@ -9269,3 +9269,60 @@ html {
   opacity: 0.85;
   margin-left: 2px;
 }
+
+/* ══════════════════════════════════════════
+   RAZORPAY BUTTON & ERROR STYLES
+══════════════════════════════════════════ */
+
+/* Razorpay branded button — gold gradient, top position */
+.razorpay-btn {
+  background: linear-gradient(135deg, #072654 0%, #1a56c4 100%) !important;
+  border: none !important;
+  color: #fff !important;
+  position: relative;
+  overflow: hidden;
+}
+
+.razorpay-btn::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 60%);
+  pointer-events: none;
+}
+
+.razorpay-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(26, 86, 196, 0.45) !important;
+  background: linear-gradient(135deg, #0a3070 0%, #2266e0 100%) !important;
+}
+
+.razorpay-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* Razorpay error message */
+.razorpay-error-msg {
+  width: 100%;
+  padding: 10px 14px;
+  background: rgba(239, 68, 68, 0.12);
+  border: 1px solid rgba(239, 68, 68, 0.35);
+  border-radius: 10px;
+  color: #dc2626;
+  font-size: 0.82rem;
+  font-weight: 500;
+  line-height: 1.45;
+  animation: fadeInDown 0.25s ease;
+}
+
+/* Spin animation for loading icon */
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to   { transform: rotate(360deg); }
+}
+
+.spin-icon {
+  animation: spin 0.9s linear infinite;
+}
