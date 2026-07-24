@@ -233,14 +233,19 @@ export default function MyOrders() {
                       {/* Items */}
                       <div className="myorders-items-section">
                         <h4 className="myorders-items-title">Items:</h4>
-                        {batch.map((order) => (
-                          <div key={order.id} className="myorders-item-row">
-                            <span className="myorders-item-name">
-                              {order.item} <span className="myorders-item-qty">× {order.qty}</span>
-                            </span>
-                            <span className="myorders-item-price">₹{order.total}</span>
-                          </div>
-                        ))}
+                        {batch.map((order) => {
+                          const displayItems = order.items && order.items.length > 0
+                            ? order.items
+                            : [{ name: order.item, qty: order.qty, total: order.total }];
+                          return displayItems.map((it, itIdx) => (
+                            <div key={`${order.id}-${itIdx}`} className="myorders-item-row">
+                              <span className="myorders-item-name">
+                                {it.name} <span className="myorders-item-qty">× {it.qty}</span>
+                              </span>
+                              <span className="myorders-item-price">₹{it.total}</span>
+                            </div>
+                          ));
+                        })}
                       </div>
 
                       {/* Status */}

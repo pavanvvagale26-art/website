@@ -5079,6 +5079,78 @@ html {
   box-shadow: 0 6px 16px rgba(37, 99, 235, 0.35);
 }
 
+/* ---- Multi-Item Order Display ---- */
+.order-multi-item {
+  border-left: 4px solid #6366f1;
+}
+
+.order-items-list {
+  margin: 12px 0 4px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #faf5ff, #f5f3ff);
+  border-radius: 12px;
+  border: 1px solid #e9e5f5;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.order-item-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 8px 10px;
+  background: rgba(255, 255, 255, 0.7);
+  border-radius: 10px;
+  border: 1px solid #ede9fe;
+  transition: background 0.2s;
+}
+
+.order-item-row:hover {
+  background: rgba(255, 255, 255, 0.95);
+}
+
+.order-item-thumb {
+  width: 44px;
+  height: 44px;
+  border-radius: 8px;
+  object-fit: cover;
+  border: 1px solid #e2e8f0;
+  flex-shrink: 0;
+}
+
+.order-item-info {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.order-item-name {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: #1e293b;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.order-item-meta {
+  font-size: 0.75rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.order-items-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 10px 12px 4px;
+  border-top: 1.5px dashed #c4b5fd;
+  margin-top: 4px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #4c1d95;
+}
 
 /* ============================================================
    DELIVERY PARTNER PANEL

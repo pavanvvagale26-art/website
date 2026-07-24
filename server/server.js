@@ -1,39 +1,14 @@
 require("dotenv").config();
 const express = require("express");
+const mongoose = require("mongoose");
 const Razorpay = require("razorpay");
 const crypto = require("crypto");
 const cors = require("cors");
-const fs = require("fs");
-const path = require("path");
+
+const Order = require("./models/Order");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
-
-// ── Data store path ───────────────────────────────────────────────────────────
-const DATA_DIR = path.join(__dirname, "data");
-const ORDERS_FILE = path.join(DATA_DIR, "orders.json");
-
-// Ensure data directory and orders file exist
-if (!fs.existsSync(DATA_DIR)) {
-  fs.mkdirSync(DATA_DIR, { recursive: true });
-}
-if (!fs.existsSync(ORDERS_FILE)) {
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify([]), "utf8");
-}
-
-// ── Helpers ───────────────────────────────────────────────────────────────────
-function readOrders() {
-  try {
-    const raw = fs.readFileSync(ORDERS_FILE, "utf8");
-    return JSON.parse(raw);
-  } catch {
-    return [];
-  }
-}
-
-function writeOrders(orders) {
-  fs.writeFileSync(ORDERS_FILE, JSON.stringify(orders, null, 2), "utf8");
-}
 
 // ── Middleware ──────────────────────────────────────────────────────────────
 app.use(express.json({ limit: "5mb" }));
@@ -68,15 +43,27 @@ app.get("/api/health", (req, res) => {
 
 // ── GET /api/orders ───────────────────────────────────────────────────────────
 // Returns all orders sorted newest first
-app.get("/api/orders", (req, res) => {
-  const orders = readOrders();
-  res.json(orders);
+app.get("/api/orders", async (req, res) => {
+  try {
+    const orders = await Order.find().sort({ createdAt: -1 }).lean();
+
+    // Map orderId → id so the frontend doesn't need any changes
+    const mapped = orders.map((o) => {
+      const { _id, orderId, __v, ...rest } = o;
+      return { id: orderId, ...rest };
+    });
+
+    res.json(mapped);
+  } catch (err) {
+    console.error("GET /api/orders error:", err);
+    res.status(500).json({ error: "Failed to fetch orders" });
+  }
 });
 
 // ── POST /api/orders ──────────────────────────────────────────────────────────
 // Body: order object from the customer (item, price, qty, total, customer info, etc.)
 // Creates a new order with server-side timestamp and ID, status = "pending"
-app.post("/api/orders", (req, res) => {
+app.post("/api/orders", async (req, res) => {
   try {
     const orderData = req.body;
     if (!orderData || !orderData.item) {
@@ -89,21 +76,37 @@ app.post("/api/orders", (req, res) => {
     const day = String(now.getDate()).padStart(2, "0");
     const localDate = `${year}-${month}-${day}`;
 
-    const newOrder = {
-      id: `ORD-${Date.now()}`,
+    const newOrder = await Order.create({
+      orderId: `ORD-${Date.now()}`,
       ...orderData,
       status: "pending",
       deliveryPartner: null,
-      createdAt: now.toISOString(),
       date: localDate,
+    });
+
+    // Return the same shape the frontend expects
+    const response = {
+      id: newOrder.orderId,
+      item: newOrder.item,
+      price: newOrder.price,
+      qty: newOrder.qty,
+      total: newOrder.total,
+      img: newOrder.img,
+      items: newOrder.items || [],
+      customer: newOrder.customer,
+      phone: newOrder.phone,
+      email: newOrder.email,
+      location: newOrder.location,
+      coords: newOrder.coords,
+      paymentMethod: newOrder.paymentMethod,
+      status: newOrder.status,
+      deliveryPartner: newOrder.deliveryPartner,
+      createdAt: newOrder.createdAt.toISOString(),
+      date: newOrder.date,
     };
 
-    const orders = readOrders();
-    orders.unshift(newOrder); // newest first
-    writeOrders(orders);
-
-    console.log(`📦  New order: ${newOrder.id} — ${newOrder.item} by ${newOrder.customer}`);
-    return res.status(201).json(newOrder);
+    console.log(`📦  New order: ${response.id} — ${response.item} (${(response.items || []).length} items) by ${response.customer}`);
+    return res.status(201).json(response);
   } catch (err) {
     console.error("POST /api/orders error:", err);
     return res.status(500).json({ error: "Failed to save order" });
@@ -113,23 +116,27 @@ app.post("/api/orders", (req, res) => {
 // ── PATCH /api/orders/:id ─────────────────────────────────────────────────────
 // Body: { status?, deliveryPartner?, codPaymentReceived?, codCollectionMethod? }
 // Updates a specific order's fields (admin / delivery actions)
-app.patch("/api/orders/:id", (req, res) => {
+app.patch("/api/orders/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    const orders = readOrders();
-    const idx = orders.findIndex((o) => o.id === id);
+    const updated = await Order.findOneAndUpdate(
+      { orderId: id },
+      { $set: updates },
+      { new: true, lean: true }
+    );
 
-    if (idx === -1) {
+    if (!updated) {
       return res.status(404).json({ error: "Order not found" });
     }
 
-    orders[idx] = { ...orders[idx], ...updates };
-    writeOrders(orders);
+    // Return same shape
+    const { _id, orderId, __v, ...rest } = updated;
+    const response = { id: orderId, ...rest };
 
     console.log(`✏️  Order ${id} updated:`, updates);
-    return res.status(200).json(orders[idx]);
+    return res.status(200).json(response);
   } catch (err) {
     console.error("PATCH /api/orders/:id error:", err);
     return res.status(500).json({ error: "Failed to update order" });
@@ -221,13 +228,30 @@ app.post("/api/verify-payment", (req, res) => {
   });
 });
 
-// ── Start server ──────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
-  console.log(`\n🚀  SGS Restaurant API running on http://localhost:${PORT}`);
-  console.log(`   GET  /api/orders`);
-  console.log(`   POST /api/orders`);
-  console.log(`   PATCH /api/orders/:id`);
-  console.log(`   POST /api/create-order`);
-  console.log(`   POST /api/verify-payment`);
-  console.log(`   GET  /api/health\n`);
-});
+// ── Connect to MongoDB and start server ──────────────────────────────────────
+async function startServer() {
+  try {
+    if (!process.env.MONGODB_URI) {
+      console.error("❌  Missing MONGODB_URI in server/.env");
+      process.exit(1);
+    }
+
+    await mongoose.connect(process.env.MONGODB_URI);
+    console.log("✅  Connected to MongoDB Atlas");
+
+    app.listen(PORT, () => {
+      console.log(`\n🚀  SGS Restaurant API running on http://localhost:${PORT}`);
+      console.log(`   GET  /api/orders`);
+      console.log(`   POST /api/orders`);
+      console.log(`   PATCH /api/orders/:id`);
+      console.log(`   POST /api/create-order`);
+      console.log(`   POST /api/verify-payment`);
+      console.log(`   GET  /api/health\n`);
+    });
+  } catch (err) {
+    console.error("❌  Failed to connect to MongoDB:", err.message);
+    process.exit(1);
+  }
+}
+
+startServer();

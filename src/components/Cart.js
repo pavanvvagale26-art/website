@@ -302,23 +302,29 @@ export default function Cart() {
     // Brief delay for non-Razorpay methods to show confirming state
     await new Promise((r) => setTimeout(r, method === "cod" ? 1200 : method === "razorpay" ? 500 : 1800));
 
-    // Place orders with customer details
-    cart.forEach((item) => {
-      addOrder({
-        item: item.name,
-        price: item.price,
-        qty: item.qty,
-        total: item.price * item.qty,
-        img: item.img,
-        customer: custName.trim() || "Guest User",
-        phone: custPhone.trim(),
-        email: custEmail.trim(),
-        location: custLocation.trim() || "Not provided",
-        coords: custCoords || null, // { lat, lng } for Google Maps navigation
-        paymentMethod: method,
-        ...(transactionId ? { transactionId } : {}),
-        ...(method === "razorpay" ? { paymentReceived: true } : {}),
-      });
+    // Place ONE combined order with all cart items bundled together
+    const totalQty = cart.reduce((sum, i) => sum + i.qty, 0);
+    addOrder({
+      items: cart.map((i) => ({
+        name: i.name,
+        price: i.price,
+        qty: i.qty,
+        total: i.price * i.qty,
+        img: i.img,
+      })),
+      item: cart.length > 1 ? `${cart.length} items` : cart[0].name,
+      price: total,
+      qty: totalQty,
+      total: total,
+      img: cart[0].img,
+      customer: custName.trim() || "Guest User",
+      phone: custPhone.trim(),
+      email: custEmail.trim(),
+      location: custLocation.trim() || "Not provided",
+      coords: custCoords || null,
+      paymentMethod: method,
+      ...(transactionId ? { transactionId } : {}),
+      ...(method === "razorpay" ? { paymentReceived: true } : {}),
     });
 
     setPaymentStep("success");

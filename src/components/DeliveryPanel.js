@@ -215,16 +215,38 @@ export default function DeliveryPanel() {
             </div>
           ) : (
             <div className="delivery-orders-grid">
-              {availableOrders.map((order) => (
-                <div key={order.id} className="delivery-order-card">
+              {availableOrders.map((order) => {
+                const hasMultiItems = order.items && order.items.length > 1;
+                const orderItems = order.items && order.items.length > 0 ? order.items : [{ name: order.item, price: order.price, qty: order.qty, total: order.total, img: order.img }];
+                return (
+                <div key={order.id} className={`delivery-order-card ${hasMultiItems ? 'order-multi-item' : ''}`}>
                   <div className="d-order-top">
-                    <img src={order.img} alt={order.item} className="d-order-img" />
+                    {!hasMultiItems && (
+                      <img src={orderItems[0].img} alt={orderItems[0].name} className="d-order-img" />
+                    )}
                     <div className="d-order-info">
                       <span className="d-order-id">{order.id}</span>
-                      <h4>{order.item}</h4>
-                      <p>Qty: {order.qty} &bull; ₹{order.total}</p>
+                      <h4>{hasMultiItems ? `${orderItems.length} Items` : orderItems[0].name}</h4>
+                      <p>Total Qty: {order.qty} &bull; ₹{order.total}</p>
                     </div>
                   </div>
+                  {hasMultiItems && (
+                    <div className="order-items-list">
+                      {orderItems.map((it, idx) => (
+                        <div key={idx} className="order-item-row">
+                          <img src={it.img} alt={it.name} className="order-item-thumb" />
+                          <div className="order-item-info">
+                            <span className="order-item-name">{it.name}</span>
+                            <span className="order-item-meta">Qty: {it.qty} &bull; ₹{it.total}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="order-items-total">
+                        <span>Combined Total</span>
+                        <span>₹{order.total}</span>
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
@@ -252,7 +274,8 @@ export default function DeliveryPanel() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -273,16 +296,38 @@ export default function DeliveryPanel() {
             </div>
           ) : (
             <div className="delivery-orders-grid">
-              {activeDeliveries.map((order) => (
-                <div key={order.id} className="delivery-order-card active-delivery-card">
+              {activeDeliveries.map((order) => {
+                const hasMultiItems = order.items && order.items.length > 1;
+                const orderItems = order.items && order.items.length > 0 ? order.items : [{ name: order.item, price: order.price, qty: order.qty, total: order.total, img: order.img }];
+                return (
+                <div key={order.id} className={`delivery-order-card active-delivery-card ${hasMultiItems ? 'order-multi-item' : ''}`}>
                   <div className="d-order-top">
-                    <img src={order.img} alt={order.item} className="d-order-img" />
+                    {!hasMultiItems && (
+                      <img src={orderItems[0].img} alt={orderItems[0].name} className="d-order-img" />
+                    )}
                     <div className="d-order-info">
                       <span className="d-order-id">{order.id}</span>
-                      <h4>{order.item}</h4>
-                      <p>Qty: {order.qty} &bull; ₹{order.total}</p>
+                      <h4>{hasMultiItems ? `${orderItems.length} Items` : orderItems[0].name}</h4>
+                      <p>Total Qty: {order.qty} &bull; ₹{order.total}</p>
                     </div>
                   </div>
+                  {hasMultiItems && (
+                    <div className="order-items-list">
+                      {orderItems.map((it, idx) => (
+                        <div key={idx} className="order-item-row">
+                          <img src={it.img} alt={it.name} className="order-item-thumb" />
+                          <div className="order-item-info">
+                            <span className="order-item-name">{it.name}</span>
+                            <span className="order-item-meta">Qty: {it.qty} &bull; ₹{it.total}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="order-items-total">
+                        <span>Combined Total</span>
+                        <span>₹{order.total}</span>
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
@@ -409,7 +454,8 @@ export default function DeliveryPanel() {
                     </button>
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           )}
         </section>
@@ -422,16 +468,38 @@ export default function DeliveryPanel() {
               <span className="section-count completed-count">{completedDeliveries.length}</span>
             </h3>
             <div className="delivery-orders-grid">
-              {completedDeliveries.map((order) => (
-                <div key={order.id} className="delivery-order-card completed-card">
+              {completedDeliveries.map((order) => {
+                const hasMultiItems = order.items && order.items.length > 1;
+                const orderItems = order.items && order.items.length > 0 ? order.items : [{ name: order.item, price: order.price, qty: order.qty, total: order.total, img: order.img }];
+                return (
+                <div key={order.id} className={`delivery-order-card completed-card ${hasMultiItems ? 'order-multi-item' : ''}`}>
                   <div className="d-order-top">
-                    <img src={order.img} alt={order.item} className="d-order-img" />
+                    {!hasMultiItems && (
+                      <img src={orderItems[0].img} alt={orderItems[0].name} className="d-order-img" />
+                    )}
                     <div className="d-order-info">
                       <span className="d-order-id">{order.id}</span>
-                      <h4>{order.item}</h4>
-                      <p>Qty: {order.qty} &bull; ₹{order.total}</p>
+                      <h4>{hasMultiItems ? `${orderItems.length} Items` : orderItems[0].name}</h4>
+                      <p>Total Qty: {order.qty} &bull; ₹{order.total}</p>
                     </div>
                   </div>
+                  {hasMultiItems && (
+                    <div className="order-items-list">
+                      {orderItems.map((it, idx) => (
+                        <div key={idx} className="order-item-row">
+                          <img src={it.img} alt={it.name} className="order-item-thumb" />
+                          <div className="order-item-info">
+                            <span className="order-item-name">{it.name}</span>
+                            <span className="order-item-meta">Qty: {it.qty} &bull; ₹{it.total}</span>
+                          </div>
+                        </div>
+                      ))}
+                      <div className="order-items-total">
+                        <span>Combined Total</span>
+                        <span>₹{order.total}</span>
+                      </div>
+                    </div>
+                  )}
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
@@ -445,7 +513,8 @@ export default function DeliveryPanel() {
                     <FaCheckCircle /> Delivered
                   </div>
                 </div>
-              ))}
+                );
+              })}
             </div>
           </section>
         )}

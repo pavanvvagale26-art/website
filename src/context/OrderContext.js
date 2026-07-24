@@ -72,6 +72,7 @@ export function OrderProvider({ children }) {
       const fallback = {
         id: `ORD-${Date.now()}`,
         ...orderData,
+        items: orderData.items || [],
         status: "pending",
         deliveryPartner: null,
         createdAt: new Date().toISOString(),
