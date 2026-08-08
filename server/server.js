@@ -22,6 +22,7 @@ app.use(
       "http://127.0.0.1:3001",
       "https://website-vlor.vercel.app",
       "https://website-nu-seven-25.vercel.app",
+      "https://website-jshqcb0cn-pavan-website.vercel.app",
     ],
     methods: ["GET", "POST", "PATCH", "DELETE"],
     allowedHeaders: ["Content-Type", "Authorization"],
