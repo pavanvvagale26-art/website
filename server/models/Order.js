@@ -70,6 +70,14 @@ const orderSchema = new mongoose.Schema(
       type: String,
       default: null,
     },
+    rejectedBy: {
+      type: [String],
+      default: [],
+    },
+    assignedTo: {
+      type: String,
+      default: null,
+    },
     date: {
       type: String,
     },

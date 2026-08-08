@@ -6,6 +6,7 @@ const crypto = require("crypto");
 const cors = require("cors");
 
 const Order = require("./models/Order");
+const authRoutes = require("./routes/auth");
 
 const app = express();
 const PORT = process.env.PORT || 5000;
@@ -16,11 +17,13 @@ app.use(
   cors({
     origin: [
       "http://localhost:3000",
+      "http://localhost:3001",
       "http://127.0.0.1:3000",
+      "http://127.0.0.1:3001",
       "https://website-vlor.vercel.app",
     ],
-    methods: ["GET", "POST", "PATCH"],
-    allowedHeaders: ["Content-Type"],
+    methods: ["GET", "POST", "PATCH", "DELETE"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   })
 );
 
@@ -35,6 +38,98 @@ if (!process.env.RAZORPAY_KEY_ID || !process.env.RAZORPAY_KEY_SECRET) {
 const razorpay = new Razorpay({
   key_id: process.env.RAZORPAY_KEY_ID,
   key_secret: process.env.RAZORPAY_KEY_SECRET,
+});
+
+// ── Auth routes ──────────────────────────────────────────────────────────────
+app.use("/api/auth", authRoutes);
+
+// ══════════════════════════════════════════════════════════════════════════════
+// ── DELIVERY PARTNER REGISTRY (in-memory) ────────────────────────────────────
+// ══════════════════════════════════════════════════════════════════════════════
+// Each entry: { name: "...", phone: "...", registeredAt: <timestamp> }
+let activeDeliveryPartners = [];
+
+// Round-robin index: tracks which partner got the last assignment so we cycle
+let lastAssignedIndex = -1;
+
+// Helper: find the next available (registered + not busy) partner
+// "busy" = currently delivering an order (deliveryPartner === name & status === out_for_delivery)
+async function getNextAvailablePartner(excludeNames = []) {
+  if (activeDeliveryPartners.length === 0) return null;
+
+  // Find partners currently busy delivering
+  const busyPartners = await Order.find({
+    status: "out_for_delivery",
+    deliveryPartner: { $ne: null },
+  }).distinct("deliveryPartner");
+
+  const total = activeDeliveryPartners.length;
+
+  // Cycle through all partners starting from the one after lastAssignedIndex
+  for (let i = 0; i < total; i++) {
+    const idx = (lastAssignedIndex + 1 + i) % total;
+    const partner = activeDeliveryPartners[idx];
+
+    // Skip if they rejected this order, or they're currently delivering
+    if (excludeNames.includes(partner.name)) continue;
+    if (busyPartners.includes(partner.name)) continue;
+
+    lastAssignedIndex = idx;
+    return partner.name;
+  }
+
+  return null; // Everyone is busy or has rejected
+}
+
+// ── POST /api/delivery-partners/register ─────────────────────────────────────
+app.post("/api/delivery-partners/register", async (req, res) => {
+  const { name, phone } = req.body;
+  if (!name) return res.status(400).json({ error: "name is required" });
+
+  // Remove duplicate (re-registration)
+  activeDeliveryPartners = activeDeliveryPartners.filter((p) => p.name !== name);
+  activeDeliveryPartners.push({ name, phone: phone || "", registeredAt: Date.now() });
+
+  console.log(`🟢  Delivery partner registered: ${name} (${activeDeliveryPartners.length} active)`);
+
+  // ── Auto-assign any unassigned "out_for_delivery" orders to available partners ──
+  try {
+    const unassignedOrders = await Order.find({
+      status: "out_for_delivery",
+      deliveryPartner: null,
+      assignedTo: null,
+    });
+
+    for (const order of unassignedOrders) {
+      const rejectedList = order.rejectedBy || [];
+      const nextPartner = await getNextAvailablePartner(rejectedList);
+      if (nextPartner) {
+        await Order.findOneAndUpdate(
+          { orderId: order.orderId },
+          { $set: { assignedTo: nextPartner } }
+        );
+        console.log(`📋  Auto-assigned unassigned order ${order.orderId} → ${nextPartner}`);
+      }
+    }
+  } catch (err) {
+    console.error("Auto-assign on register error:", err);
+  }
+
+  return res.json({ success: true, partners: activeDeliveryPartners.map((p) => p.name) });
+});
+
+// ── POST /api/delivery-partners/unregister ───────────────────────────────────
+app.post("/api/delivery-partners/unregister", (req, res) => {
+  const { name } = req.body;
+  activeDeliveryPartners = activeDeliveryPartners.filter((p) => p.name !== name);
+
+  console.log(`🔴  Delivery partner unregistered: ${name} (${activeDeliveryPartners.length} active)`);
+  return res.json({ success: true });
+});
+
+// ── GET /api/delivery-partners ───────────────────────────────────────────────
+app.get("/api/delivery-partners", (req, res) => {
+  res.json(activeDeliveryPartners.map((p) => ({ name: p.name, phone: p.phone })));
 });
 
 // ── Health check ─────────────────────────────────────────────────────────────
@@ -82,6 +177,8 @@ app.post("/api/orders", async (req, res) => {
       ...orderData,
       status: "pending",
       deliveryPartner: null,
+      assignedTo: null,
+      rejectedBy: [],
       date: localDate,
     });
 
@@ -102,6 +199,8 @@ app.post("/api/orders", async (req, res) => {
       paymentMethod: newOrder.paymentMethod,
       status: newOrder.status,
       deliveryPartner: newOrder.deliveryPartner,
+      assignedTo: newOrder.assignedTo || null,
+      rejectedBy: newOrder.rejectedBy || [],
       createdAt: newOrder.createdAt.toISOString(),
       date: newOrder.date,
     };
@@ -114,15 +213,66 @@ app.post("/api/orders", async (req, res) => {
   }
 });
 
+// ── POST /api/orders/:id/reject ───────────────────────────────────────────────
+// Body: { partnerName: "<name>" }
+// Adds the partner to rejectedBy, auto-assigns to the NEXT available partner in cycle
+app.post("/api/orders/:id/reject", async (req, res) => {
+  try {
+    const { id } = req.params;
+    const { partnerName } = req.body;
+
+    if (!partnerName) {
+      return res.status(400).json({ error: "partnerName is required" });
+    }
+
+    // Step 1: Add to rejectedBy, clear assignedTo and deliveryPartner
+    let updated = await Order.findOneAndUpdate(
+      { orderId: id },
+      {
+        $addToSet: { rejectedBy: partnerName },
+        $set: { assignedTo: null, deliveryPartner: null },
+      },
+      { new: true, lean: true }
+    );
+
+    if (!updated) {
+      return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Step 2: Auto-assign to the next available partner in the cycle
+    const nextPartner = await getNextAvailablePartner(updated.rejectedBy || []);
+
+    if (nextPartner) {
+      updated = await Order.findOneAndUpdate(
+        { orderId: id },
+        { $set: { assignedTo: nextPartner } },
+        { new: true, lean: true }
+      );
+      console.log(`🔄  Order ${id} rejected by ${partnerName} → reassigned to ${nextPartner}`);
+    } else {
+      console.log(`⚠️  Order ${id} rejected by ${partnerName} — no available partners left`);
+    }
+
+    const { _id, orderId, __v, ...rest } = updated;
+    const response = { id: orderId, ...rest };
+
+    return res.status(200).json(response);
+  } catch (err) {
+    console.error("POST /api/orders/:id/reject error:", err);
+    return res.status(500).json({ error: "Failed to reject order" });
+  }
+});
+
 // ── PATCH /api/orders/:id ─────────────────────────────────────────────────────
 // Body: { status?, deliveryPartner?, codPaymentReceived?, codCollectionMethod? }
 // Updates a specific order's fields (admin / delivery actions)
+// If status changes to "out_for_delivery", auto-assigns to the first available partner
 app.patch("/api/orders/:id", async (req, res) => {
   try {
     const { id } = req.params;
     const updates = req.body;
 
-    const updated = await Order.findOneAndUpdate(
+    let updated = await Order.findOneAndUpdate(
       { orderId: id },
       { $set: updates },
       { new: true, lean: true }
@@ -130,6 +280,32 @@ app.patch("/api/orders/:id", async (req, res) => {
 
     if (!updated) {
       return res.status(404).json({ error: "Order not found" });
+    }
+
+    // Auto-assign when admin marks "out_for_delivery" without a specific partner
+    if (
+      updates.status === "out_for_delivery" &&
+      !updates.deliveryPartner &&
+      !updated.assignedTo
+    ) {
+      const nextPartner = await getNextAvailablePartner(updated.rejectedBy || []);
+      if (nextPartner) {
+        updated = await Order.findOneAndUpdate(
+          { orderId: id },
+          { $set: { assignedTo: nextPartner } },
+          { new: true, lean: true }
+        );
+        console.log(`📋  Order ${id} auto-assigned to ${nextPartner}`);
+      }
+    }
+
+    // When a partner accepts (deliveryPartner is set), clear assignedTo
+    if (updates.deliveryPartner) {
+      updated = await Order.findOneAndUpdate(
+        { orderId: id },
+        { $set: { assignedTo: null } },
+        { new: true, lean: true }
+      );
     }
 
     // Return same shape
@@ -242,9 +418,18 @@ async function startServer() {
 
     app.listen(PORT, () => {
       console.log(`\n🚀  SGS Restaurant API running on http://localhost:${PORT}`);
+      console.log(`   POST /api/auth/signup`);
+      console.log(`   POST /api/auth/login`);
+      console.log(`   POST /api/auth/google`);
+      console.log(`   GET  /api/auth/me`);
+      console.log(`   POST /api/auth/logout`);
       console.log(`   GET  /api/orders`);
       console.log(`   POST /api/orders`);
       console.log(`   PATCH /api/orders/:id`);
+      console.log(`   POST /api/orders/:id/reject`);
+      console.log(`   POST /api/delivery-partners/register`);
+      console.log(`   POST /api/delivery-partners/unregister`);
+      console.log(`   GET  /api/delivery-partners`);
       console.log(`   POST /api/create-order`);
       console.log(`   POST /api/verify-payment`);
       console.log(`   GET  /api/health\n`);

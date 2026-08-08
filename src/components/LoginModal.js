@@ -275,9 +275,9 @@ export default function LoginModal() {
         {/* Demo credentials hint */}
         <div className="login-demo-hint">
           {loginRole === "admin" ? (
-            <p><strong>Demo Admin:</strong> admin@sgs.com / admin123</p>
+            <p><strong>Admin Logins:</strong> admin@sgs.com / admin123 &bull; admin2@sgs.com / admin123 &bull; pavan@sgs.com / pavan123</p>
           ) : (
-            <p><strong>Demo Delivery:</strong> Use your delivery partner credentials</p>
+            <p><strong>Delivery Logins:</strong> delivery1@sgs.com &ndash; delivery4@sgs.com / delivery123</p>
           )}
         </div>
       </div>

@@ -116,9 +116,12 @@ export default function DeliveryPanel() {
     navigate("/");
   };
 
-  // Orders marked out for delivery (available to pick up)
+  // Orders specifically assigned to THIS partner by the cyclic system
   const availableOrders = todayOrders.filter(
-    (o) => o.status === "out_for_delivery" && !o.deliveryPartner
+    (o) =>
+      o.status === "out_for_delivery" &&
+      !o.deliveryPartner &&
+      o.assignedTo === user.name
   );
 
   // Orders assigned to this delivery partner
@@ -250,10 +253,15 @@ export default function DeliveryPanel() {
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
-                    title="Open route in Google Maps"
+                    title="Open route using saved customer coordinates"
                   >
                     <FaMapMarkerAlt />
-                    <span>{order.location}</span>
+                    <span>
+                      {order.location}
+                      {order.coords?.lat && order.coords?.lng && (
+                        <small className="d-coords-badge">📍 ({Number(order.coords.lat).toFixed(4)}, {Number(order.coords.lng).toFixed(4)})</small>
+                      )}
+                    </span>
                     <FaExternalLinkAlt className="d-location-link-icon" />
                   </div>
                   <div className="d-order-customer">
@@ -268,7 +276,7 @@ export default function DeliveryPanel() {
                     </button>
                     <button
                       className="d-reject-btn"
-                      onClick={() => rejectDelivery(order.id)}
+                      onClick={() => rejectDelivery(order.id, user.name)}
                     >
                       <FaTimes /> Reject
                     </button>
@@ -331,10 +339,15 @@ export default function DeliveryPanel() {
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
-                    title="Open route in Google Maps"
+                    title="Open route using saved customer coordinates"
                   >
                     <FaMapMarkerAlt />
-                    <span>{order.location}</span>
+                    <span>
+                      {order.location}
+                      {order.coords?.lat && order.coords?.lng && (
+                        <small className="d-coords-badge">📍 ({Number(order.coords.lat).toFixed(4)}, {Number(order.coords.lng).toFixed(4)})</small>
+                      )}
+                    </span>
                     <FaExternalLinkAlt className="d-location-link-icon" />
                   </div>
                   <div className="d-order-customer">
@@ -503,10 +516,15 @@ export default function DeliveryPanel() {
                   <div
                     className="d-order-location d-order-location-clickable"
                     onClick={() => openGoogleMapsRoute(order)}
-                    title="Open route in Google Maps"
+                    title="Open route using saved customer coordinates"
                   >
                     <FaMapMarkerAlt />
-                    <span>{order.location}</span>
+                    <span>
+                      {order.location}
+                      {order.coords?.lat && order.coords?.lng && (
+                        <small className="d-coords-badge">📍 ({Number(order.coords.lat).toFixed(4)}, {Number(order.coords.lng).toFixed(4)})</small>
+                      )}
+                    </span>
                     <FaExternalLinkAlt className="d-location-link-icon" />
                   </div>
                   <div className="completed-badge">

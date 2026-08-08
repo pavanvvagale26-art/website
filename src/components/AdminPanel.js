@@ -2,10 +2,11 @@ import React, { useState, useContext, useEffect } from "react";
 import { AuthContext } from "../context/AuthContext";
 import { MenuContext } from "../context/MenuContext";
 import { OrderContext } from "../context/OrderContext";
+import { GalleryContext } from "../context/GalleryContext";
 import { useNavigate } from "react-router-dom";
 import {
   FaBoxOpen, FaClipboardList, FaChartBar, FaSignOutAlt,
-  FaPlus, FaTrash, FaCheck, FaFire, FaTruck, FaImage,
+  FaPlus, FaTrash, FaCheck, FaFire, FaTruck, FaImage, FaImages,
   FaRupeeSign, FaShoppingBag, FaMotorcycle, FaArrowUp, FaEdit, FaTimes, FaSave,
   FaPhone, FaEnvelope, FaUser, FaMapMarkerAlt,
   FaClock, FaUtensils, FaChartLine, FaReceipt
@@ -16,6 +17,7 @@ export default function AdminPanel() {
   const { user, logout } = useContext(AuthContext);
   const { menu, addProduct, removeProduct, editProduct } = useContext(MenuContext);
   const { todayOrders, analytics, updateOrderStatus } = useContext(OrderContext);
+  const { gallery, addImage, removeImage } = useContext(GalleryContext);
   const navigate = useNavigate();
 
   const [activeTab, setActiveTab] = useState("dashboard");
@@ -36,6 +38,11 @@ export default function AdminPanel() {
   const [editDesc, setEditDesc] = useState("");
   const [editImagePreview, setEditImagePreview] = useState(null);
   const [editSuccess, setEditSuccess] = useState(false);
+
+  // Gallery form state
+  const [galleryImagePreview, setGalleryImagePreview] = useState(null);
+  const [galleryCaption, setGalleryCaption] = useState("");
+  const [galleryAddSuccess, setGalleryAddSuccess] = useState(false);
 
   // Animated counters
   const [animatedRevenue, setAnimatedRevenue] = useState(0);
@@ -115,6 +122,34 @@ export default function AdminPanel() {
     navigate("/");
   };
 
+  // Gallery handlers
+  const handleGalleryImageUpload = (e) => {
+    const file = e.target.files[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File too large. Max 5MB.");
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => setGalleryImagePreview(reader.result);
+      reader.readAsDataURL(file);
+    }
+  };
+
+  const handleAddGalleryImage = (e) => {
+    e.preventDefault();
+    if (!galleryImagePreview) {
+      alert("Please upload an image.");
+      return;
+    }
+    addImage({ src: galleryImagePreview, caption: galleryCaption });
+    setGalleryImagePreview(null);
+    setGalleryCaption("");
+    e.target.reset();
+    setGalleryAddSuccess(true);
+    setTimeout(() => setGalleryAddSuccess(false), 2000);
+  };
+
   const handleEditItem = (cat, item) => {
     setEditingItem(item);
     setEditCategory(cat);
@@ -166,16 +201,26 @@ export default function AdminPanel() {
     preparing: { label: "Preparing", color: "#8b5cf6", bg: "#ede9fe", icon: <FaFire /> },
     out_for_delivery: { label: "Out for Delivery", color: "#f97316", bg: "#ffedd5", icon: <FaMotorcycle /> },
     delivered: { label: "Delivered", color: "#10b981", bg: "#d1fae5", icon: <FaCheck /> },
+    cancelled: { label: "Cancelled", color: "#ef4444", bg: "#fee2e2", icon: <FaTimes /> },
   };
 
   const getNextActions = (status) => {
     switch (status) {
       case "pending":
-        return [{ action: "accepted", label: "Accept Order", icon: <FaCheck /> }];
+        return [
+          { action: "accepted", label: "Accept Order", icon: <FaCheck />, isAccept: true },
+          { action: "cancelled", label: "Reject Order", icon: <FaTimes />, isReject: true },
+        ];
       case "accepted":
-        return [{ action: "preparing", label: "Start Preparing", icon: <FaFire /> }];
+        return [
+          { action: "preparing", label: "Start Preparing", icon: <FaFire /> },
+          { action: "cancelled", label: "Reject Order", icon: <FaTimes />, isReject: true },
+        ];
       case "preparing":
-        return [{ action: "out_for_delivery", label: "Out for Delivery", icon: <FaTruck /> }];
+        return [
+          { action: "out_for_delivery", label: "Out for Delivery", icon: <FaTruck /> },
+          { action: "cancelled", label: "Reject Order", icon: <FaTimes />, isReject: true },
+        ];
       default:
         return [];
     }
@@ -191,7 +236,15 @@ export default function AdminPanel() {
   const totalMenuItems = (menu.brunch?.length || 0) + (menu.evening?.length || 0) + (menu.beverages?.length || 0);
 
   return (
-    <div className="admin-panel">
+    <>
+      {/* Mobile Top Bar — outside admin-panel so sticky works correctly */}
+      <div className="admin-mobile-topbar">
+        <img src="/logo.png" alt="Logo" className="mobile-topbar-logo" />
+        <h3>Admin</h3>
+        <button className="mobile-logout" onClick={handleLogout}><FaSignOutAlt /></button>
+      </div>
+
+      <div className="admin-panel">
       {/* Sidebar */}
       <aside className="admin-sidebar">
         <div className="sidebar-header">
@@ -230,6 +283,13 @@ export default function AdminPanel() {
             <span>Items Management</span>
           </button>
           <button
+            className={`sidebar-btn ${activeTab === "gallery" ? "sidebar-active" : ""}`}
+            onClick={() => setActiveTab("gallery")}
+          >
+            <span className="sidebar-btn-icon"><FaImages /></span>
+            <span>Gallery Management</span>
+          </button>
+          <button
             className={`sidebar-btn ${activeTab === "orders" ? "sidebar-active" : ""}`}
             onClick={() => setActiveTab("orders")}
           >
@@ -254,20 +314,16 @@ export default function AdminPanel() {
 
       {/* Main Content */}
       <main className="admin-main">
-        {/* Mobile Top Bar */}
-        <div className="admin-mobile-topbar">
-          <img src="/logo.png" alt="Logo" className="mobile-topbar-logo" />
-          <h3>Admin</h3>
-          <button className="mobile-logout" onClick={handleLogout}><FaSignOutAlt /></button>
-        </div>
-
-        {/* Mobile Tab Bar */}
+        {/* Tab Bar — sticky below topbar (visible on ≤750px) */}
         <div className="admin-mobile-tabs">
           <button className={activeTab === "dashboard" ? "mtab-active" : ""} onClick={() => setActiveTab("dashboard")}>
             <FaChartBar /><span>Dashboard</span>
           </button>
           <button className={activeTab === "items" ? "mtab-active" : ""} onClick={() => setActiveTab("items")}>
             <FaBoxOpen /><span>Items</span>
+          </button>
+          <button className={activeTab === "gallery" ? "mtab-active" : ""} onClick={() => setActiveTab("gallery")}>
+            <FaImages /><span>Gallery</span>
           </button>
           <button className={activeTab === "orders" ? "mtab-active" : ""} onClick={() => setActiveTab("orders")}>
             <FaClipboardList /><span>Orders</span>
@@ -680,6 +736,92 @@ export default function AdminPanel() {
           </div>
         )}
 
+        {/* ===== GALLERY TAB ===== */}
+        {activeTab === "gallery" && (
+          <div className="admin-content fade-in">
+            <div className="admin-content-header">
+              <h1><FaImages className="header-icon" /> Gallery Management</h1>
+              <p>Add and manage your restaurant gallery images</p>
+            </div>
+
+            {/* Add Gallery Image Form */}
+            <div className="item-form-card">
+              <h2><FaPlus /> Add New Image</h2>
+              <form onSubmit={handleAddGalleryImage} className="item-form">
+                <div className="item-form-grid">
+                  <div className="form-group form-group-full">
+                    <label><FaImage /> Upload Image</label>
+                    <div className="image-upload-zone">
+                      <input
+                        type="file"
+                        accept="image/*"
+                        onChange={handleGalleryImageUpload}
+                        id="gallery-image-upload"
+                      />
+                      <label htmlFor="gallery-image-upload" className="upload-label">
+                        {galleryImagePreview ? (
+                          <img src={galleryImagePreview} alt="Preview" className="upload-preview" />
+                        ) : (
+                          <div className="upload-placeholder">
+                            <FaImage />
+                            <span>Click to upload image</span>
+                            <small>JPG, PNG up to 5MB</small>
+                          </div>
+                        )}
+                      </label>
+                    </div>
+                  </div>
+
+                  <div className="form-group form-group-full">
+                    <label>Caption (Optional)</label>
+                    <input
+                      type="text"
+                      placeholder="E.g., Our signature Chicken Palav"
+                      value={galleryCaption}
+                      onChange={(e) => setGalleryCaption(e.target.value)}
+                    />
+                  </div>
+                </div>
+
+                <button type="submit" className="item-submit-btn">
+                  <FaPlus /> Add to Gallery
+                </button>
+
+                {galleryAddSuccess && (
+                  <div className="add-success-msg">
+                    <FaCheck /> Image added successfully!
+                  </div>
+                )}
+              </form>
+            </div>
+
+            {/* Current Gallery Images */}
+            <div className="items-list-section">
+              <h2>Current Gallery Images <span className="cat-count">{gallery.length} images</span></h2>
+              <div className="gallery-grid-admin">
+                {gallery.map((img) => (
+                  <div key={img.id} className="gallery-card-admin">
+                    <img src={img.src} alt={img.caption || "Gallery"} />
+                    {img.caption && <span className="gallery-card-caption">{img.caption}</span>}
+                    <button
+                      className="gallery-delete-btn"
+                      onClick={() => {
+                        if (window.confirm("Delete this image?")) removeImage(img.id);
+                      }}
+                      title="Delete image"
+                    >
+                      <FaTrash />
+                    </button>
+                  </div>
+                ))}
+                {gallery.length === 0 && (
+                  <p className="empty-category">No images in gallery.</p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
         {/* ===== ORDERS TAB ===== */}
         {activeTab === "orders" && (
           <div className="admin-content fade-in">
@@ -767,8 +909,40 @@ export default function AdminPanel() {
                     <div className="ocd-row">
                       <FaMapMarkerAlt className="ocd-icon" />
                       <span className="ocd-label">Location:</span>
-                      <span className="ocd-value">{order.location || 'Not provided'}</span>
+                      <span className="ocd-value">
+                        {order.location || 'Not provided'}
+                        {order.coords?.lat && order.coords?.lng && (
+                          <span className="ocd-coords-badge"> (Lat: {Number(order.coords.lat).toFixed(4)}, Lng: {Number(order.coords.lng).toFixed(4)})</span>
+                        )}
+                      </span>
                     </div>
+                    {order.coords?.lat && order.coords?.lng ? (
+                      <div className="ocd-row">
+                        <button
+                          type="button"
+                          className="admin-view-map-btn"
+                          onClick={() => {
+                            const url = `https://www.google.com/maps/search/?api=1&query=${order.coords.lat},${order.coords.lng}`;
+                            window.open(url, "_blank");
+                          }}
+                        >
+                          <FaMapMarkerAlt /> View on Map
+                        </button>
+                      </div>
+                    ) : order.location ? (
+                      <div className="ocd-row">
+                        <button
+                          type="button"
+                          className="admin-view-map-btn"
+                          onClick={() => {
+                            const url = `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(order.location)}`;
+                            window.open(url, "_blank");
+                          }}
+                        >
+                          <FaMapMarkerAlt /> View on Map (Google Maps)
+                        </button>
+                      </div>
+                    ) : null}
                     {order.deliveryPartner && (
                       <div className="ocd-row">
                         <FaTruck className="ocd-icon" />
@@ -783,7 +957,7 @@ export default function AdminPanel() {
                       {getNextActions(order.status).map((a) => (
                         <button
                           key={a.action}
-                          className="order-action-btn"
+                          className={`order-action-btn ${a.isReject ? 'order-action-reject' : ''}`}
                           onClick={() => updateOrderStatus(order.id, a.action)}
                         >
                           {a.icon} {a.label}
@@ -797,6 +971,7 @@ export default function AdminPanel() {
           </div>
         )}
       </main>
-    </div>
+      </div>{/* end admin-panel */}
+    </>
   );
 }

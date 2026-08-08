@@ -19,14 +19,16 @@ const STATUS_OPTIONS = [
   { value: "preparing", label: "Preparing" },
   { value: "out_for_delivery", label: "Out of Delivery" },
   { value: "delivered", label: "Delivered" },
+  { value: "cancelled", label: "Cancelled / Rejected" },
 ];
 
 const STATUS_COLORS = {
   pending: "#f59e0b",
   accepted: "#3b82f6",
   preparing: "#8b5cf6",
-  out_for_delivery: "#ef4444",
+  out_for_delivery: "#f97316",
   delivered: "#10b981",
+  cancelled: "#ef4444",
 };
 
 export default function MyOrders() {
@@ -108,13 +110,14 @@ export default function MyOrders() {
     };
   };
 
-  // Overall status of a batch (worst status)
+  // Overall status of a batch
   const getBatchStatus = (batch) => {
+    if (batch.some((o) => o.status === "cancelled")) return "cancelled";
     const statusPriority = ["pending", "accepted", "preparing", "out_for_delivery", "delivered"];
     let worstIdx = 999;
     batch.forEach((o) => {
       const idx = statusPriority.indexOf(o.status);
-      if (idx < worstIdx) worstIdx = idx;
+      if (idx !== -1 && idx < worstIdx) worstIdx = idx;
     });
     return statusPriority[worstIdx] || "pending";
   };
@@ -288,6 +291,13 @@ export default function MyOrders() {
                         <span>Total:</span>
                         <span className="myorders-total-value">₹{batchTotal}</span>
                       </div>
+
+                      {/* Cancelled Order Alert Banner */}
+                      {batchStatus === "cancelled" && (
+                        <div className="myorders-cancelled-alert">
+                          ❌ Order Cancelled / Rejected by Restaurant. If you have any questions, please contact our support team or place a new order.
+                        </div>
+                      )}
 
                       {/* Track Order Button */}
                       {(batchStatus === "out_for_delivery" || batchStatus === "preparing" || batchStatus === "accepted") && (

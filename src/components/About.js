@@ -23,7 +23,6 @@ export default function About() {
             Opening as early as 8:30 AM, SGS serves approximately 300 customers daily — with numbers rising significantly on busy days. Apart from their signature Gundu Palav, favorites like Kebab and the special Kshatriya chicken dish have earned loyal followers over the years.
             Closed on Mondays and Saturdays, and bustling on Sundays, SGS remains one of Bengaluru’s most beloved spots for authentic, no-compromise South Indian flavors.
           </p>
-          {/* <button className="about-btn">ORDER NOW</button> */}
         </div>
 
 

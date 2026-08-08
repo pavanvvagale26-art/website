@@ -1,8 +1,20 @@
-import React from "react";
+import React, { useContext } from "react";
 import { FaInstagram, FaFacebook, FaWhatsapp } from "react-icons/fa";
+import { AuthContext } from "../context/AuthContext";
 import "../App.css";
 
 export default function Contact() {
+  const { user, setShowCustomerAuthModal } = useContext(AuthContext);
+
+  const handleSendMessage = () => {
+    if (!user) {
+      setShowCustomerAuthModal(true);
+      return;
+    }
+    // TODO: actual message submission logic
+    alert("Message sent successfully!");
+  };
+
   return (
     <div className="contact-page">
 
@@ -22,7 +34,7 @@ export default function Contact() {
           <input type="email" placeholder="Your Email" />
           <input type="text" placeholder="Phone (optional)" />
           <textarea placeholder="Your Message"></textarea>
-          <button className="contact-submit">Send Message</button>
+          <button className="contact-submit" onClick={handleSendMessage}>Send Message</button>
         </div>
 
         {/* RIGHT: INFO CARDS */}

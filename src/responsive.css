@@ -1,102 +1,983 @@
-@media (max-width: 992px) {
-  .about-section {
-    flex-direction: column;   /* Image on top */
-    text-align: center;
-  }
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SGS PALAV — COMMERCIAL-GRADE RESPONSIVE FIXES & STYLING
+   ═══════════════════════════════════════════════════════════════════════════════ */
 
-  .about-image {
-    display: flex;
-    
-    justify-content: center;  /* Center image */
-  }
-
-   .about-image img {
-    width: 100%;
-    height: 50%;
-    max-width: 320px;
-  }
-
-  .about-text {
-    margin-top: 30px;
-    width: auto;
-  }
+/* ── Global Viewport & Container Safety ── */
+html,
+body {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
 }
 
-/* ============================= */
-/* MOBILE HERO DESIGN */
-/* ============================= */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
 
-@media (max-width: 922px) {
+#root,
+.App,
+.app-container {
+  width: 100% !important;
+  max-width: 100vw !important;
+  overflow-x: hidden !important;
+}
 
-   .hero-section {
-    flex-direction: column-reverse;   /* Image on top */
+/* ── Desktop Helpers ── */
+.desktop-only-btn {
+  display: inline-flex;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════════
+   MOBILE RESPONSIVE SYSTEM (ONLY WHEN SCREEN WIDTH IS <= 750px)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+/* ── Bottom Nav Bar: hidden on desktop (shown only ≤750px) ── */
+.bottom-nav-bar {
+  display: none;
+}
+
+@media (max-width: 750px) {
+
+  .desktop-only-btn {
+    display: none !important;
+  }
+
+  /* ── 1. HEADER / NAVBAR (WHEN SCREEN WIDTH <= 750px) ── */
+  .burger-nav {
+    padding: 6px 10px !important;
+    min-height: auto !important;
+    display: flex !important;
+    flex-wrap: wrap !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+    background: rgba(255, 255, 255, 0.98) !important;
+    backdrop-filter: blur(16px) !important;
+    -webkit-backdrop-filter: blur(16px) !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 1005 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    border-bottom: 1px solid #f1f5f9 !important;
+  }
+
+  .nav-left {
+    order: 1 !important;
+    flex-shrink: 0 !important;
+  }
+
+  .burger-logo {
+    width: 34px !important;
+    height: auto !important;
+  }
+
+  /* Right Side Action Buttons (Only Icon Symbols, No Text Names) */
+  .nav-right-header {
+    order: 2 !important;
+    display: flex !important;
+    align-items: center !important;
+    gap: 6px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* Hide Text Names on Mobile <= 750px */
+  .cart-text,
+  .myorders-nav-text,
+  .nav-profile-name {
+    display: none !important;
+  }
+
+  /* Compact Cart Icon Button */
+  .cart-button {
+    font-size: 0.72rem !important;
+    padding: 6px 8px !important;
+    border-radius: 50px !important;
+    background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%) !important;
+    color: #ffffff !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 4px !important;
+  }
+
+  .cart-icon {
+    font-size: 1.05rem !important;
+    color: #fbbf24 !important;
+  }
+
+  .cart-count-badge {
+    background: linear-gradient(135deg, #e10600 0%, #ff4136 100%) !important;
+    color: #fff !important;
+    font-size: 0.65rem !important;
+    font-weight: 800 !important;
+    padding: 1px 5px !important;
+    border-radius: 10px !important;
+    min-width: 15px !important;
+  }
+
+  /* Compact Orders Icon Button */
+  .myorders-nav-btn {
+    padding: 6px 8px !important;
+    border-radius: 50px !important;
+    background: #fef3c7 !important;
+    border: 1px solid #f59e0b !important;
+    color: #d97706 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .myorders-nav-icon {
+    font-size: 1.05rem !important;
+    color: #d97706 !important;
+  }
+
+  /* Compact Profile/Login Icon Button */
+  .nav-profile-btn {
+    padding: 6px 8px !important;
+    border-radius: 50px !important;
+    background: #ffffff !important;
+    border: 1.5px solid #e10600 !important;
+    color: #e10600 !important;
+    display: inline-flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .nav-profile-icon {
+    font-size: 1.05rem !important;
+    color: #e10600 !important;
+  }
+
+  /* ── Navigation Links: hidden from top bar on mobile — moved to bottom nav bar ── */
+  .nav-menu {
+    display: none !important;
+  }
+
+
+  /* ── Body padding so content isn't hidden behind fixed bottom nav ── */
+  body {
+    padding-bottom: 70px !important;
+  }
+
+  /* ── Bottom Nav Bar styles (mobile only) ── */
+  .bottom-nav-bar {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    width: 100% !important;
+    height: 62px !important;
+    background: #ffffff !important;
+    border-top: 1px solid #e8e8e8 !important;
+    box-shadow: 0 -4px 18px rgba(0, 0, 0, 0.10) !important;
+    z-index: 1100 !important;
+    justify-content: space-around !important;
+    align-items: center !important;
+    padding: 0 4px !important;
+    box-sizing: border-box !important;
+  }
+
+  .bottom-nav-item {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    flex: 1 !important;
+    gap: 3px !important;
+    text-decoration: none !important;
+    color: #94a3b8 !important;
+    padding: 6px 0 !important;
+    transition: color 0.2s ease !important;
+    min-width: 0 !important;
+  }
+
+  .bottom-nav-item.active {
+    color: #e07b17 !important;
+  }
+
+  .bottom-nav-item:active {
+    color: #e07b17 !important;
+    transform: scale(0.93) !important;
+  }
+
+  .bottom-nav-icon {
+    font-size: 1.25rem !important;
+    line-height: 1 !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+  }
+
+  .bottom-nav-label {
+    font-size: 0.6rem !important;
+    font-weight: 700 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.04em !important;
+    white-space: nowrap !important;
+  }
+
+  /* ── 2. HERO BANNER MOBILE ── */
+  .hero-section {
+    padding: 14px 8px 20px;
+    background: linear-gradient(135deg, #f4e8d6 0%, #f8efdd 45%, #f2d8bc 100%);
+    color: #1a1a1a;
+    border-bottom-left-radius: 20px;
+    border-bottom-right-radius: 20px;
+  }
+
+  .hero-section .hero-inner {
+    width: 100%;
+    flex-direction: column-reverse;
     text-align: center;
-    padding: 40px 20px;
-  }
-
-  .hero-left {
-    width: 100%;
-    padding: 10%;
-  }
-
-  .hero-right {
-    width: 100%;
-    margin-bottom: 20px;
-  }
-
-  .hero-right img {
-    width: 85%;
-    max-width: 320px;
+    padding: 16px 12px;
+    gap: 14px;
+    background: rgba(255, 255, 255, 0.04);
+    backdrop-filter: blur(16px);
+    border-radius: 16px;
+    box-sizing: border-box !important;
   }
 
   .hero-left h1 {
-    font-size: 26px;
-    text-align: center;
+    font-size: 1.4rem;
+    line-height: 1.25;
+    margin-bottom: 4px;
   }
 
   .hero-left h2 {
-    font-size: 22px;
-    text-align: center;
-    margin-top: -3%;
+    font-size: 0.95rem;
+    margin-bottom: 6px;
   }
 
   .hero-left p {
-    font-size: 14px;
-    line-height: 1.6;
-    margin-top: 10px;
-    text-align: center;
+    font-size: 0.8rem;
+    margin: 0 auto 12px;
   }
 
-  .btn-red {
-    width: 70%;
-    max-width: 250px;
-    margin: 20px auto 0;
-    display: block;
+  .hero-section .btn-red {
+    width: 85%;
+    max-width: 200px;
+    padding: 9px 18px;
+    font-size: 0.85rem;
+    border-radius: 22px;
+  }
+
+  .hero-right img {
+    max-width: 170px;
+    border-radius: 14px;
+  }
+
+  /* ── 3. MENU PAGE 2-COLUMN CARDS FIX ── */
+  .menu-page {
+    padding: 14px 6px 30px;
+    background: #f8fafc;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-page h2 {
+    font-size: 1.15rem;
+    margin: 0 auto 10px;
+  }
+
+  .menu-section-title {
+    margin: 18px auto 8px;
+    font-size: 0.95rem;
+  }
+
+  .menu-grid {
+    display: grid !important;
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 8px !important;
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 6px auto 0 !important;
+    padding: 0 !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-card {
+    background: #ffffff !important;
+    border-radius: 12px !important;
+    border: 1px solid #e2e8f0 !important;
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.03) !important;
+    overflow: hidden !important;
+    display: flex !important;
+    flex-direction: column !important;
+    justify-content: space-between !important;
+    height: 100% !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-card-img-wrap {
+    width: 100% !important;
+    height: 105px !important;
+    overflow: hidden !important;
+  }
+
+  .menu-card img {
+    width: 100% !important;
+    height: 100% !important;
+    object-fit: cover !important;
+  }
+
+  .menu-card-body {
+    padding: 8px 8px 10px !important;
+    display: flex !important;
+    flex-direction: column !important;
+    flex: 1 !important;
+    justify-content: space-between !important;
+    box-sizing: border-box !important;
+  }
+
+  .menu-card h3 {
+    margin: 0 0 2px !important;
+    font-size: 0.82rem !important;
+    font-weight: 700 !important;
+    color: #0f172a !important;
+    line-height: 1.25 !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    min-height: 2.05rem !important;
+  }
+
+  .price {
+    margin: 2px 0 4px !important;
+    font-size: 0.9rem !important;
+    font-weight: 800 !important;
+    color: #e10600 !important;
+    display: block !important;
+    line-height: 1 !important;
+  }
+
+  .menu-card p.desc {
+    margin: 0 0 6px !important;
+    font-size: 0.72rem !important;
+    line-height: 1.3 !important;
+    color: #64748b !important;
+    display: -webkit-box !important;
+    -webkit-line-clamp: 2 !important;
+    -webkit-box-orient: vertical !important;
+    overflow: hidden !important;
+    height: 2.3rem !important;
+    min-height: 2.3rem !important;
+    max-height: 2.3rem !important;
+  }
+
+  .menu-card-footer {
+    margin-top: auto !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .add-btn {
+    width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 7px 6px !important;
+    font-size: 0.72rem !important;
+    font-weight: 800 !important;
+    border-radius: 18px !important;
+    background: linear-gradient(135deg, #e10600 0%, #c00500 100%) !important;
+    color: #ffffff !important;
+    text-align: center !important;
+    border: none !important;
+    box-shadow: 0 3px 8px rgba(225, 6, 0, 0.2) !important;
+    cursor: pointer !important;
+  }
+
+  .added-cart-row {
+    margin: 0 !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 4px !important;
+  }
+
+  .added-label {
+    padding: 6px 4px !important;
+    font-size: 0.7rem !important;
+    border-radius: 16px !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+    text-overflow: ellipsis !important;
+    overflow: hidden !important;
+    white-space: nowrap !important;
+    box-sizing: border-box !important;
+  }
+
+  .added-qty-badge {
+    min-width: 16px !important;
+    height: 16px !important;
+    font-size: 0.68rem !important;
+  }
+
+  .add-more-btn {
+    width: 26px !important;
+    height: 26px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── 4. DELIVERY DETAILS MODAL FIX (SCREENSHOT 1) ── */
+  .upi-modal-overlay {
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    box-sizing: border-box !important;
+  }
+
+  .upi-modal {
+    width: 96% !important;
+    max-width: 380px !important;
+    padding: 20px 14px !important;
+    border-radius: 20px !important;
+    max-height: 90vh !important;
+    overflow-y: auto !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+    margin: 0 auto !important;
+  }
+
+  .cust-details-step {
+    padding: 4px 2px 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .cust-input-field {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    font-size: 0.85rem !important;
+    padding: 10px 12px !important;
+  }
+
+  .loc-map-container {
+    height: 190px !important;
+    min-height: 180px !important;
+    border-radius: 12px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── 5. DELIVERY DASHBOARD FIX (SCREENSHOT 2) ── */
+  .delivery-panel {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+    box-sizing: border-box !important;
+  }
+
+  .delivery-orders-grid {
+    grid-template-columns: 1fr !important;
+    gap: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .delivery-order-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px 10px !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
+  }
+
+  .d-order-location-clickable {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    font-size: 0.78rem !important;
+    display: flex !important;
+    align-items: flex-start !important;
+    gap: 6px !important;
+    padding: 8px 10px !important;
+  }
+
+  .d-order-location-clickable span {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+    flex: 1 !important;
+    min-width: 0 !important;
+  }
+
+  .d-coords-badge {
+    display: block !important;
+    margin-top: 2px !important;
+    word-break: break-word !important;
+  }
+
+  /* ── 6. ADMIN PANEL ORDERS TAB FIX (SCREENSHOT 3) ── */
+  .order-card-admin {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px 10px !important;
+    overflow: hidden !important;
+  }
+
+  .order-card-top {
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 8px !important;
+  }
+
+  .order-card-right {
+    display: flex !important;
+    flex-wrap: wrap !important;
+    gap: 6px !important;
+    align-items: center !important;
+    width: 100% !important;
+    margin-top: 4px !important;
+  }
+
+  .status-pill,
+  .payment-badge {
+    font-size: 0.72rem !important;
+    padding: 4px 8px !important;
+    white-space: nowrap !important;
+  }
+
+  .ocd-value {
+    white-space: normal !important;
+    word-break: break-word !important;
+    overflow-wrap: anywhere !important;
+  }
+
+  .order-customer-details {
+    padding: 10px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  /* ── ADMIN PANEL ITEMS TAB FIX (SCREENSHOT 3) ── */
+  .items-grid-admin {
+    grid-template-columns: 1fr !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .item-card-admin {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 10px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    gap: 8px !important;
+    overflow: hidden !important;
+  }
+
+  .item-card-info {
+    flex: 1 !important;
+    min-width: 0 !important;
+    overflow: hidden !important;
+  }
+
+  .item-card-info strong {
+    font-size: 0.85rem !important;
+    display: block !important;
+    overflow: hidden !important;
+    text-overflow: ellipsis !important;
+    white-space: nowrap !important;
+  }
+
+  .item-card-actions {
+    display: flex !important;
+    gap: 4px !important;
+    flex-shrink: 0 !important;
+  }
+
+  /* ── ADMIN PANEL RECENT ORDERS TABLE & BREAKDOWN FIX ── */
+  .dashboard-grid-two {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 14px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+  }
+
+  .dashboard-breakdown,
+  .dashboard-recent {
+    width: 100% !important;
+    max-width: 100% !important;
+    box-sizing: border-box !important;
+    padding: 14px 10px !important;
+    overflow: hidden !important;
+    border-radius: 14px !important;
+  }
+
+  .breakdown-bar-row {
+    display: flex !important;
+    align-items: center !important;
+    gap: 8px !important;
+    width: 100% !important;
+    box-sizing: border-box !important;
+    margin-bottom: 10px !important;
+  }
+
+  .breakdown-label {
+    width: 95px !important;
+    font-size: 0.74rem !important;
+    flex-shrink: 0 !important;
+  }
+
+  .breakdown-track {
+    flex: 1 !important;
+    min-width: 0 !important;
+    height: 10px !important;
+    border-radius: 6px !important;
+    overflow: hidden !important;
+    background: #e2e8f0 !important;
+  }
+
+  .recent-table-wrap {
+    width: 100% !important;
+    max-width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+    border-radius: 10px !important;
+    box-sizing: border-box !important;
+    display: block !important;
+  }
+
+  .recent-table {
+    width: 100% !important;
+    min-width: 480px !important;
+    font-size: 0.76rem !important;
+    border-collapse: collapse !important;
+  }
+
+  .recent-table th,
+  .recent-table td {
+    padding: 8px 6px !important;
+    white-space: nowrap !important;
+  }
+
+  .admin-mobile-tabs {
+    display: flex !important;
+    width: 100% !important;
+    justify-content: space-around !important;
+    background: #0f172a !important;
+    padding: 6px 0 !important;
+    border-bottom: 2px solid #1e293b !important;
+    box-sizing: border-box !important;
+    margin: 0 !important;
+    overflow-x: auto !important;
+  }
+
+  /* ── 7. FOOTER MOBILE ── */
+  .home-footer {
+    padding: 20px 10px 14px;
+    background: #0f172a;
+    color: #f8fafc;
+  }
+
+  .footer-container {
+    grid-template-columns: 1fr;
+    gap: 14px;
+  }
+
+  .footer-map iframe {
+    height: 150px;
+    border-radius: 10px;
+  }
+
+  /* ═══════════════════════════════════════════════════════════════
+     ADMIN PANEL — RESPONSIVE (≤750px)
+     ═══════════════════════════════════════════════════════════════ */
+
+  /* Hide desktop sidebar */
+  .admin-sidebar {
+    display: none !important;
+  }
+
+  /* Main content: full width, no left margin */
+  .admin-panel {
+    flex-direction: column !important;
+  }
+
+  .admin-main {
+    margin-left: 0 !important;
+    width: 100% !important;
+    padding-bottom: 70px !important; /* space for mobile tab bar */
+  }
+
+  .admin-content {
+    padding: 14px 12px !important;
+  }
+
+  /* ── Mobile Top Bar (logo + title + logout) ── */
+  .admin-mobile-topbar {
+    display: flex !important;
+    align-items: center !important;
+    justify-content: space-between !important;
+    padding: 10px 14px !important;
+    background: linear-gradient(180deg, #0c1222 0%, #131b2e 100%) !important;
+    position: sticky !important;
+    top: 0 !important;
+    z-index: 200 !important;
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3) !important;
+  }
+
+  .mobile-topbar-logo {
+    width: 36px !important;
+    height: 36px !important;
+    border-radius: 8px !important;
+    border: 1.5px solid rgba(251, 191, 36, 0.4) !important;
+  }
+
+  .admin-mobile-topbar h3 {
+    color: #fff !important;
+    font-size: 1rem !important;
+    font-weight: 700 !important;
+    margin: 0 !important;
+    letter-spacing: 0.3px !important;
+  }
+
+  .mobile-logout {
+    background: rgba(239, 68, 68, 0.15) !important;
+    border: 1px solid rgba(239, 68, 68, 0.3) !important;
+    color: #fca5a5 !important;
+    border-radius: 8px !important;
+    width: 36px !important;
+    height: 36px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    cursor: pointer !important;
+    font-size: 0.95rem !important;
+    transition: all 0.2s !important;
+  }
+
+  /* ── Mobile Tab Bar (fixed at bottom, above the main bottom-nav) ── */
+  .admin-mobile-tabs {
+    display: flex !important;
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1200 !important;
+    background: linear-gradient(180deg, #0c1222 0%, #131b2e 100%) !important;
+    border-top: 1px solid rgba(255, 255, 255, 0.07) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.35) !important;
+    height: 60px !important;
+  }
+
+  .admin-mobile-tabs button {
+    flex: 1 !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 3px !important;
+    background: transparent !important;
+    border: none !important;
+    color: #64748b !important;
+    font-size: 0.58rem !important;
+    font-weight: 600 !important;
+    text-transform: uppercase !important;
+    letter-spacing: 0.05em !important;
+    cursor: pointer !important;
+    padding: 6px 0 !important;
+    transition: all 0.2s ease !important;
+    position: relative !important;
+  }
+
+  .admin-mobile-tabs button svg {
+    font-size: 1.1rem !important;
+    margin-bottom: 1px !important;
+  }
+
+  .admin-mobile-tabs button.mtab-active {
+    color: #fbbf24 !important;
+    background: rgba(251, 191, 36, 0.08) !important;
+  }
+
+  .admin-mobile-tabs button.mtab-active::before {
+    content: "" !important;
+    position: absolute !important;
+    top: 0 !important;
+    left: 20% !important;
+    right: 20% !important;
+    height: 2px !important;
+    background: #fbbf24 !important;
+    border-radius: 0 0 3px 3px !important;
+  }
+
+  .mtab-badge {
+    position: absolute !important;
+    top: 4px !important;
+    right: 16px !important;
+    background: #ef4444 !important;
+    color: #fff !important;
+    font-size: 0.55rem !important;
+    font-weight: 800 !important;
+    min-width: 16px !important;
+    height: 16px !important;
+    border-radius: 8px !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    padding: 0 3px !important;
+    animation: badgePulse 2s infinite !important;
+  }
+
+  /* ── Dashboard Stats: 2-column grid ── */
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 10px !important;
+  }
+
+  .stat-card {
+    padding: 14px !important;
+    gap: 10px !important;
+    border-radius: 14px !important;
+  }
+
+  .stat-value {
+    font-size: 1.4rem !important;
+  }
+
+  .stat-label {
+    font-size: 0.7rem !important;
+  }
+
+  /* ── Admin Content Header ── */
+  .admin-content-header {
+    flex-direction: column !important;
+    gap: 8px !important;
+    margin-bottom: 16px !important;
+  }
+
+  .admin-welcome h1 {
+    font-size: 1.2rem !important;
+  }
+
+  .admin-date-badge {
+    font-size: 0.72rem !important;
+    padding: 6px 12px !important;
+    width: fit-content !important;
+  }
+
+  /* ── Orders: single column cards ── */
+  .orders-list {
+    gap: 10px !important;
+  }
+
+  .order-card {
+    padding: 12px !important;
+    border-radius: 14px !important;
+  }
+
+  .order-card-header {
+    flex-direction: column !important;
+    gap: 6px !important;
+  }
+
+  .order-actions {
+    flex-direction: column !important;
+    gap: 6px !important;
+    width: 100% !important;
+  }
+
+  .order-actions button {
+    width: 100% !important;
+    justify-content: center !important;
+  }
+
+  /* ── Items / Gallery forms: full width ── */
+  .admin-items-grid,
+  .admin-menu-grid {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .admin-add-form,
+  .admin-form-card {
+    padding: 14px !important;
+    border-radius: 14px !important;
+  }
+
+  .admin-form-card input,
+  .admin-form-card textarea,
+  .admin-form-card select {
+    font-size: 0.9rem !important;
+  }
+
+  /* ── Recent activity / charts ── */
+  .dashboard-bottom {
+    grid-template-columns: 1fr !important;
+    gap: 12px !important;
+  }
+
+  .activity-list-item {
+    padding: 10px !important;
+    font-size: 0.8rem !important;
   }
 }
 
-@media (max-width: 768px) {
-
-  .burger-nav {
-    padding: 0 10px;
-  }
-
-  .nav-menu {
-    gap: 8px;
-    margin: 0 auto;
+/* ═══════════════════════════════════════════════════════════════════════════════
+   SMALL MOBILE SCREENS (max-width: 400px)
+   ═══════════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 400px) {
+  .burger-logo {
+    width: 34px;
   }
 
   .nav-menu a {
-    font-size: 0.55rem;
+    font-size: 0.66rem;
+    padding: 3px 5px;
   }
 
-  .burger-hero {
-    grid-template-columns: 1fr;
-    text-align: center;
-    padding: 120px 20px 60px;
+  .cart-button {
+    padding: 4px 7px;
+    font-size: 0.7rem;
   }
 
-  .burger-image img {
-    width: 280px;
+  .nav-profile-btn {
+    padding: 4px 7px;
+    font-size: 0.7rem;
   }
-}
+
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr) !important;
+    gap: 6px !important;
+  }
+
+  .menu-card-img-wrap {
+    height: 95px !important;
+  }
+
+  .menu-card h3 {
+    font-size: 0.78rem !important;
+  }
+
+  .price {
+    font-size: 0.86rem !important;
+  }
+
+  .add-btn {
+    padding: 6px 4px !important;
+    font-size: 0.68rem !important;
+  }
+}

@@ -91,11 +91,18 @@ export function OrderProvider({ children }) {
       prev.map((o) => (o.id === orderId ? { ...o, status: newStatus } : o))
     );
     try {
-      await fetch(`${API_URL}/orders/${orderId}`, {
+      const res = await fetch(`${API_URL}/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ status: newStatus }),
       });
+      // When setting out_for_delivery, server auto-assigns a partner — update local state
+      if (res.ok && newStatus === "out_for_delivery") {
+        const updated = await res.json();
+        setOrders((prev) =>
+          prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+        );
+      }
     } catch (err) {
       console.error("updateOrderStatus error:", err);
     }
@@ -104,37 +111,18 @@ export function OrderProvider({ children }) {
       preparing: "Order is being Prepared",
       out_for_delivery: "Order is Out for Delivery",
       delivered: "Order Delivered",
+      cancelled: "Order Cancelled / Rejected",
     };
-    addToast(statusLabels[newStatus] || `Status: ${newStatus}`, "success");
+    const toastType = newStatus === "cancelled" ? "error" : "success";
+    addToast(statusLabels[newStatus] || `Status: ${newStatus}`, toastType);
   }, [addToast]);
 
-  // ── Assign delivery partner ─────────────────────────────────────────────────
-  const assignDeliveryPartner = useCallback(async (orderId, partnerName) => {
-    setOrders((prev) =>
-      prev.map((o) =>
-        o.id === orderId
-          ? { ...o, deliveryPartner: partnerName, status: "out_for_delivery" }
-          : o
-      )
-    );
-    try {
-      await fetch(`${API_URL}/orders/${orderId}`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliveryPartner: partnerName, status: "out_for_delivery" }),
-      });
-    } catch (err) {
-      console.error("assignDeliveryPartner error:", err);
-    }
-    addToast(`${partnerName} assigned to order`, "success");
-  }, [addToast]);
-
-  // ── Accept delivery ─────────────────────────────────────────────────────────
+  // ── Accept delivery ─────────────────────────────────────────────────────────────
   const acceptDelivery = useCallback(async (orderId, partnerName) => {
     setOrders((prev) =>
       prev.map((o) =>
         o.id === orderId
-          ? { ...o, deliveryPartner: partnerName, status: "out_for_delivery" }
+          ? { ...o, deliveryPartner: partnerName, assignedTo: null, status: "out_for_delivery" }
           : o
       )
     );
@@ -142,7 +130,7 @@ export function OrderProvider({ children }) {
       await fetch(`${API_URL}/orders/${orderId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ deliveryPartner: partnerName, status: "out_for_delivery" }),
+        body: JSON.stringify({ deliveryPartner: partnerName, assignedTo: null, status: "out_for_delivery" }),
       });
     } catch (err) {
       console.error("acceptDelivery error:", err);
@@ -150,23 +138,39 @@ export function OrderProvider({ children }) {
     addToast("Delivery accepted!", "success");
   }, [addToast]);
 
-  // ── Reject delivery ─────────────────────────────────────────────────────────
-  const rejectDelivery = useCallback(async (orderId) => {
+  // ── Reject delivery ─────────────────────────────────────────────────────────────
+  const rejectDelivery = useCallback(async (orderId, partnerName) => {
+    // Optimistic: clear assignedTo so it disappears from our panel immediately
+    // Server will auto-assign to the next available partner
     setOrders((prev) =>
       prev.map((o) =>
-        o.id === orderId ? { ...o, status: "preparing", deliveryPartner: null } : o
+        o.id === orderId
+          ? {
+              ...o,
+              assignedTo: null,
+              deliveryPartner: null,
+              rejectedBy: [...(o.rejectedBy || []), partnerName],
+            }
+          : o
       )
     );
     try {
-      await fetch(`${API_URL}/orders/${orderId}`, {
-        method: "PATCH",
+      const res = await fetch(`${API_URL}/orders/${orderId}/reject`, {
+        method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ status: "preparing", deliveryPartner: null }),
+        body: JSON.stringify({ partnerName }),
       });
+      // Update local state with server response (has new assignedTo)
+      if (res.ok) {
+        const updated = await res.json();
+        setOrders((prev) =>
+          prev.map((o) => (o.id === updated.id ? { ...o, ...updated } : o))
+        );
+      }
     } catch (err) {
       console.error("rejectDelivery error:", err);
     }
-    addToast("Delivery rejected. Returning to preparation.", "warning");
+    addToast("Delivery rejected. Order moved to next partner.", "warning");
   }, [addToast]);
 
   // ── Mark delivered ──────────────────────────────────────────────────────────
@@ -246,7 +250,6 @@ export function OrderProvider({ children }) {
         serverOnline,
         addToast,
         updateOrderStatus,
-        assignDeliveryPartner,
         acceptDelivery,
         rejectDelivery,
         markDelivered,

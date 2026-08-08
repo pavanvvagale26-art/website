@@ -2,11 +2,21 @@ import React, { useContext } from "react";
 import "../App.css";
 import { CartContext } from "../context/CartContext";
 import { MenuContext } from "../context/MenuContext";
+import { AuthContext } from "../context/AuthContext";
 
 function MenuItemButton({ item }) {
     const { cart, addToCart } = useContext(CartContext);
+    const { user, setShowCustomerAuthModal } = useContext(AuthContext);
     const cartItem = cart.find((i) => i.id === item.id || i.name === item.name); // Check by id, fallback to name
     const isInCart = !!cartItem;
+
+    const handleAddToCart = () => {
+        if (!user) {
+            setShowCustomerAuthModal(true);
+            return;
+        }
+        addToCart(item);
+    };
 
     if (isInCart) {
         return (
@@ -20,7 +30,7 @@ function MenuItemButton({ item }) {
                 </span>
                 <button
                     className="add-more-btn"
-                    onClick={() => addToCart(item)}
+                    onClick={handleAddToCart}
                     title="Add one more"
                 >
                     <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
@@ -35,7 +45,7 @@ function MenuItemButton({ item }) {
     return (
         <button
             className="add-btn"
-            onClick={() => addToCart(item)}
+            onClick={handleAddToCart}
         >
             Add to Cart
         </button>
@@ -48,39 +58,59 @@ export default function Menu() {
     return (
         <div className="menu-page">
 
-            <h2>🍽️ Brunch Menu (10 AM – 3 PM)</h2>
+            <h2 className="menu-section-title-top">🍽️ BRUNCH MENU (10 AM – 3 PM)</h2>
             <div className="menu-grid">
                 {menu.brunch.map((item, index) => (
                     <div className="menu-card" key={item.id || index}>
-                        <img src={item.img} alt={item.name} />
-                        <h3>{item.name}</h3>
-                        <p className="price">₹{item.price}</p>
-                        <p className="desc">{item.desc}</p>
-                        <MenuItemButton item={item} />
+                        <div className="menu-card-img-wrap">
+                            <img src={item.img} alt={item.name} />
+                        </div>
+                        <div className="menu-card-body">
+                            <h3>{item.name}</h3>
+                            <div className="price">₹{item.price}</div>
+                            {item.desc && <p className="desc">{item.desc}</p>}
+                            <div className="menu-card-footer">
+                                <MenuItemButton item={item} />
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
 
-            <h2 className="menu-section-title">EVENING MENU (6 PM TO 10 PM)</h2>
+            <h2 className="menu-section-title">🌆 EVENING MENU (6 PM TO 10 PM)</h2>
             <div className="menu-grid">
                 {menu.evening.map((item, index) => (
                     <div className="menu-card" key={item.id || index}>
-                        <img src={item.img} alt={item.name} />
-                        <h3>{item.name}</h3>
-                        <p className="price">₹{item.price}</p>
-                        <p className="desc">{item.desc}</p>
-                        <MenuItemButton item={item} />
+                        <div className="menu-card-img-wrap">
+                            <img src={item.img} alt={item.name} />
+                        </div>
+                        <div className="menu-card-body">
+                            <h3>{item.name}</h3>
+                            <div className="price">₹{item.price}</div>
+                            {item.desc && <p className="desc">{item.desc}</p>}
+                            <div className="menu-card-footer">
+                                <MenuItemButton item={item} />
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
-            <h2 className="menu-section-title">BEVERAGES</h2>
+
+            <h2 className="menu-section-title">🥤 BEVERAGES</h2>
             <div className="menu-grid">
                 {menu.beverages.map((item, index) => (
                     <div className="menu-card beverages-card" key={item.id || index}>
-                        <img src={item.img} alt={item.name} className="beverage-img" />
-                        <h3>{item.name}</h3>
-                        <p className="price">₹{item.price}</p>
-                        <MenuItemButton item={item} />
+                        <div className="menu-card-img-wrap">
+                            <img src={item.img} alt={item.name} className="beverage-img" />
+                        </div>
+                        <div className="menu-card-body">
+                            <h3>{item.name}</h3>
+                            <div className="price">₹{item.price}</div>
+                            {item.desc && <p className="desc">{item.desc}</p>}
+                            <div className="menu-card-footer">
+                                <MenuItemButton item={item} />
+                            </div>
+                        </div>
                     </div>
                 ))}
             </div>
