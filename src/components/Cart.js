@@ -24,7 +24,6 @@ import {
   FaSpinner,
   FaCrosshairs,
   FaCreditCard,
-  FaSearch,
   FaHome,
 } from "react-icons/fa";
 import L from "leaflet";
@@ -86,12 +85,9 @@ export default function Cart() {
   // Address search & map state
   const [searchQuery, setSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
-  const [isSearching, setIsSearching] = useState(false);
 
-  // Caching & map refs
+  // Map refs
   const reverseGeocodeCache = useRef({});
-  const searchCacheRef = useRef({});
-  const debounceTimerRef = useRef(null);
   const mapContainerRef = useRef(null);
   const mapInstanceRef = useRef(null);
   const markerRef = useRef(null);
@@ -181,47 +177,8 @@ export default function Cart() {
   }, []);
 
   // Debounced Nominatim Address Search (min 3 chars, cache, duplicate prevention)
-  const handleSearchInputChange = (e) => {
-    const query = e.target.value;
-    setSearchQuery(query);
-    if (query.trim().length < 3) {
-      setSearchResults([]);
-      setIsSearching(false);
-      return;
-    }
-
-    if (debounceTimerRef.current) {
-      clearTimeout(debounceTimerRef.current);
-    }
-
-    setIsSearching(true);
-
-    debounceTimerRef.current = setTimeout(async () => {
-      const cleanQuery = query.trim().toLowerCase();
-      if (searchCacheRef.current[cleanQuery]) {
-        setSearchResults(searchCacheRef.current[cleanQuery]);
-        setIsSearching(false);
-        return;
-      }
-
-      try {
-        const viewboxParam = `&viewbox=${RESTAURANT_COORDS.lng - 0.5},${RESTAURANT_COORDS.lat + 0.5},${RESTAURANT_COORDS.lng + 0.5},${RESTAURANT_COORDS.lat - 0.5}`;
-        const url = `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(query)}&addressdetails=1&limit=5${viewboxParam}`;
-
-        const res = await fetch(url);
-        if (!res.ok) throw new Error("Search request failed");
-        const data = await res.json();
-
-        searchCacheRef.current[cleanQuery] = data;
-        setSearchResults(data);
-      } catch (err) {
-        console.error("Address search error:", err);
-        setSearchResults([]);
-      } finally {
-        setIsSearching(false);
-      }
-    }, 600);
-  };
+  // NOTE: handleSearchInputChange is kept here for potential future re-attachment
+  // but the search input UI is currently managed via searchQuery state directly.
 
   // Select a search result
   const handleSelectSearchResult = async (result) => {
