@@ -479,7 +479,11 @@ export default function AdminPanel() {
                       {todayOrders.slice(0, 6).map((o) => (
                         <tr key={o.id}>
                           <td className="order-id-cell">{o.id}</td>
-                          <td>{o.item}</td>
+                          <td>
+                            {o.items && o.items.length > 1
+                              ? o.items.map((it) => `${it.name} ×${it.qty}`).join(", ")
+                              : o.item}
+                          </td>
                           <td>{o.customer}</td>
                           <td>{o.qty}</td>
                           <td className="order-total-cell">₹{o.total}</td>
@@ -842,11 +846,15 @@ export default function AdminPanel() {
                 <div key={order.id} className={`order-card-admin ${order.status === 'pending' ? 'order-pending-glow' : ''}`}>
                   <div className="order-card-top">
                     <div className="order-card-left">
-                      {order.items && order.items.length > 1 ? (
+                      {order.items && order.items.length >= 1 ? (
                         /* ── Multi-item order ── */
                         <div className="order-details order-details-multi">
                           <h4 className="order-multi-title">
-                            🛒 {order.items.length} Items &nbsp;
+                            {order.items.length === 1
+                              ? <>🍽️ {order.items[0].name}</>
+                              : <>🛒 {order.items.length} Items</>
+                            }
+                            &nbsp;
                             <span className="order-total-inline">₹{order.total}</span>
                           </h4>
                           <ul className="order-items-list">
