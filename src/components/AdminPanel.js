@@ -842,14 +842,40 @@ export default function AdminPanel() {
                 <div key={order.id} className={`order-card-admin ${order.status === 'pending' ? 'order-pending-glow' : ''}`}>
                   <div className="order-card-top">
                     <div className="order-card-left">
-                      <img src={order.img} alt={order.item} className="order-thumb" />
-                      <div className="order-details">
-                        <h4>{order.item}</h4>
-                        <p className="order-meta">
-                          <span>Qty: {order.qty}</span> &bull;
-                          <span> ₹{order.total}</span>
-                        </p>
-                      </div>
+                      {order.items && order.items.length > 1 ? (
+                        /* ── Multi-item order ── */
+                        <div className="order-details order-details-multi">
+                          <h4 className="order-multi-title">
+                            🛒 {order.items.length} Items &nbsp;
+                            <span className="order-total-inline">₹{order.total}</span>
+                          </h4>
+                          <ul className="order-items-list">
+                            {order.items.map((it, idx) => (
+                              <li key={idx} className="order-item-row">
+                                {it.img && (
+                                  <img src={it.img} alt={it.name} className="order-item-thumb" />
+                                )}
+                                <span className="order-item-name">{it.name}</span>
+                                <span className="order-item-meta">
+                                  ×{it.qty} &nbsp;·&nbsp; ₹{it.total ?? it.price * it.qty}
+                                </span>
+                              </li>
+                            ))}
+                          </ul>
+                        </div>
+                      ) : (
+                        /* ── Single-item order ── */
+                        <>
+                          <img src={order.img} alt={order.item} className="order-thumb" />
+                          <div className="order-details">
+                            <h4>{order.item}</h4>
+                            <p className="order-meta">
+                              <span>Qty: {order.qty}</span> &bull;
+                              <span> ₹{order.total}</span>
+                            </p>
+                          </div>
+                        </>
+                      )}
                     </div>
                     <div className="order-card-right">
                       <span className="order-id-label">{order.id}</span>
